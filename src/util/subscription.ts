@@ -189,3 +189,5 @@ const fixBlobRefs = (obj: unknown): unknown => {
   }
   return obj
 }
+
+export const blocked_users: string[] = []

@@ -2,7 +2,7 @@ import {
   OutputSchema as RepoEvent,
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
-import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
+import { FirehoseSubscriptionBase, getOpsByType, blocked_users } from './util/subscription'
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
@@ -15,6 +15,14 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         // only chinese
         let langs = create.record.langs ?? []
         return langs.includes('zh') || /[\u4e00-\u9fa5]+/.test(create.record.text)
+      })
+      .filter((create) => {
+        // no reply
+        return create.record.reply === undefined
+      })
+      .filter((create) => {
+        // no blocked users
+        return blocked_users.includes(create.author) === false
       })
       .map((create) => {
         // map alf-related posts to a db row
