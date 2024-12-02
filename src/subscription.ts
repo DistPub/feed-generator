@@ -2,7 +2,7 @@ import {
   OutputSchema as RepoEvent,
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
-import { FirehoseSubscriptionBase, getOpsByType, blocked_users } from './util/subscription'
+import { FirehoseSubscriptionBase, getOpsByType, cached } from './util/subscription'
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
@@ -22,7 +22,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       })
       .filter((create) => {
         // no blocked users
-        return blocked_users.includes(create.author) === false
+        return cached.blocked_users.includes(create.author) === false
       })
       .map((create) => {
         // map alf-related posts to a db row

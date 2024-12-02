@@ -190,4 +190,8 @@ const fixBlobRefs = (obj: unknown): unknown => {
   return obj
 }
 
-export const blocked_users: string[] = []
+type Cached = {
+  blocked_users: string[]
+}
+
+export const cached: Cached = {blocked_users: []}
