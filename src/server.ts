@@ -68,7 +68,14 @@ export class FeedGenerator {
       ).catch(
         error => console.log(`errro when fetch blocked users: ${error}`)
       )
-    }, 60000);
+    }, 3*60000);
+
+    setInterval(async function() {
+      await this.db
+        .deleteFrom('post')
+        .where('indexedAt<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
+        .execute()
+    }, 60*60000)
 
     return new FeedGenerator(app, db, firehose, cfg)
   }
