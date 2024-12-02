@@ -84,7 +84,7 @@ export class FeedGenerator {
     let query = `list=${uri}&limit=100`
     if (cursor) query = `${query}&cursor=${cursor}`
     let response = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.graph.getList?${encodeURIComponent(query)}`)
-    let data = await response.json()
+    let data: any = await response.json()
     let users = data.items.map(item=>item.subject.did)
     if (data.cursor) users = users.concat(await FeedGenerator.fetch_list_users(uri, data.cursor))
     return users

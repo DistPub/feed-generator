@@ -1,7 +1,7 @@
 FROM node:20.11-alpine3.18
 
-RUN apk add --update dumb-init
-
+RUN apk add --update dumb-init make gcc g++ python3
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 # Avoid zombie processes, handle signal forwarding
 ENTRYPOINT ["dumb-init", "--"]
 
