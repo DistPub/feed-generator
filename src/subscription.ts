@@ -14,7 +14,12 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       .filter((create) => {
         // only chinese
         let langs = create.record.langs ?? []
-        return langs.includes('zh') || /[\u4e00-\u9fa5]+/.test(create.record.text)
+        if (langs.includes('zh')) return true
+
+        let cnc = /[\u4e00-\u9fa5]+/.test(create.record.text)
+        let japc = /[\u3040-\u309f\u30a0-\u30ff]+/.test(create.record.text)
+        let krc = /[\uac00-\ud7af]+/.test(create.record.text)
+        return cnc && !japc && !krc
       })
       .filter((create) => {
         // no reply
