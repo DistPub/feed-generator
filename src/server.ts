@@ -64,7 +64,7 @@ export class FeedGenerator {
     setInterval(async function() {
       await db
         .deleteFrom('post')
-        .where('indexedAt<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
+        .where('indexedAt', '<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
         .execute()
     }, 60*60000)
 
