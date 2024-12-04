@@ -62,7 +62,7 @@ export class FeedGenerator {
 
     setInterval(FeedGenerator.sync_blocked_users, 3*60000);
     setInterval(async function() {
-      await this.db
+      await db
         .deleteFrom('post')
         .where('indexedAt<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
         .execute()
