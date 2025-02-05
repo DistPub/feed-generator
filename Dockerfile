@@ -9,9 +9,10 @@ WORKDIR /app
 COPY package.json yarn.lock /app 
 RUN yarn install
 COPY . /app
+RUN yarn build
 EXPOSE 3001
 ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
 ENV UV_USE_IO_URING=0
 
-CMD ["yarn", "start"]
+CMD ["yarn", "serve"]
