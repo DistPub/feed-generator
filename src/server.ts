@@ -60,7 +60,7 @@ export class FeedGenerator {
     app.use(server.xrpc.router)
     app.use(wellKnown(ctx))
 
-    setInterval(FeedGenerator.sync_blocked_users, 3*60000);
+    setInterval(FeedGenerator.sync_blocked_users, 60*60000);
     setInterval(async function() {
       await db
         .deleteFrom('post')
