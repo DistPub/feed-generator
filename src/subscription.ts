@@ -27,6 +27,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       })
       .filter((create) => {
         // no blocked users
+        console.log(`new post: ${JSON.stringify(create)}`)
         return cached.blocked_users.includes(create.author) === false
       })
       .map((create) => {

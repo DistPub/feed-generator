@@ -31,7 +31,7 @@ export class FeedGenerator {
   }
 
   static create(cfg: Config) {
-    FeedGenerator.sync_blocked_users()
+    // FeedGenerator.sync_blocked_users()
     const app = express()
     const db = createDb(cfg.sqliteLocation)
     const firehose = new FirehoseSubscription(db, cfg.subscriptionEndpoint)
@@ -60,7 +60,7 @@ export class FeedGenerator {
     app.use(server.xrpc.router)
     app.use(wellKnown(ctx))
 
-    setInterval(FeedGenerator.sync_blocked_users, 60*60000);
+    // setInterval(FeedGenerator.sync_blocked_users, 60*60000);
     setInterval(async function() {
       await db
         .deleteFrom('post')

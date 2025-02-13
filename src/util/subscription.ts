@@ -12,12 +12,19 @@ import {
   isCommit,
 } from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { Database } from '../db'
+import { SocksProxyAgent } from 'socks-proxy-agent'
 
 export abstract class FirehoseSubscriptionBase {
   public sub: Subscription<RepoEvent>
 
   constructor(public db: Database, public service: string) {
+    let socks_proxy = process.env.socks_proxy
+    let agent: SocksProxyAgent | null = null
+    if (socks_proxy) {
+      agent = new SocksProxyAgent(socks_proxy)
+    }
     this.sub = new Subscription({
+      agent: agent,
       service: service,
       method: ids.ComAtprotoSyncSubscribeRepos,
       getParams: () => this.getCursor(),
