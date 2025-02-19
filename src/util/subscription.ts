@@ -21,6 +21,7 @@ export abstract class FirehoseSubscriptionBase {
     let socks_proxy = process.env.socks_proxy
     let agent: SocksProxyAgent | null = null
     if (socks_proxy) {
+      console.log(`use agent:${ socks_proxy } to connect subscription`)
       agent = new SocksProxyAgent(socks_proxy)
     }
     this.sub = new Subscription({
@@ -141,7 +142,7 @@ type Operations<T = Record<string, unknown>> = {
   deletes: DeleteOp[]
 }
 
-type CreateOp<T> = {
+export type CreateOp<T> = {
   uri: string
   cid: string
   author: string
@@ -198,7 +199,19 @@ const fixBlobRefs = (obj: unknown): unknown => {
 }
 
 type Cached = {
-  blocked_users: string[]
+  blocked_users: string[],
+  bot_list: string[],
+  not_china_domain: string[],
+  author_category: {
+    [k: string]: string
+  }
 }
 
-export const cached: Cached = {blocked_users: []}
+export const cached: Cached = {
+  blocked_users: [],
+  author_category: {},
+  bot_list: [],
+  not_china_domain: [
+    'www.bbc.com'
+  ],
+}

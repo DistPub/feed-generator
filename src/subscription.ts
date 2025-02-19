@@ -2,7 +2,15 @@ import {
   OutputSchema as RepoEvent,
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
-import { FirehoseSubscriptionBase, getOpsByType, cached } from './util/subscription'
+import { FirehoseSubscriptionBase, getOpsByType, cached, CreateOp } from './util/subscription'
+import { Record as PostRecord } from './lexicon/types/app/bsky/feed/post'
+
+function notChinaExternalURL(post: CreateOp<PostRecord>) {
+  let external = post.record?.embed?.external as any
+  if (!external) return false
+  let url = new URL(external.uri)
+  return cached.not_china_domain.includes(url.hostname)
+}
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
@@ -10,34 +18,94 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     const ops = await getOpsByType(evt)
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
-    const postsToCreate = ops.posts.creates
-      .filter((create) => {
-        // only chinese
-        let langs = create.record.langs ?? []
-        if (langs.includes('zh')) return true
-
-        let cnc = /[\u4e00-\u9fa5]+/.test(create.record.text)
-        let japc = /[\u3040-\u309f\u30a0-\u30ff]+/.test(create.record.text)
-        let krc = /[\uac00-\ud7af]+/.test(create.record.text)
-        return cnc && !japc && !krc
-      })
+    let postsToCreate = ops.posts.creates
       .filter((create) => {
         // no reply
         return create.record.reply === undefined
       })
       .filter((create) => {
-        // no blocked users
-        console.log(`new post: ${JSON.stringify(create)}`)
-        return cached.blocked_users.includes(create.author) === false
-      })
-      .map((create) => {
-        // map alf-related posts to a db row
-        return {
-          uri: create.uri,
-          cid: create.cid,
-          indexedAt: new Date().toISOString(),
+        // langs exists
+        if (create.record?.langs) {
+          let langs = create.record.langs as Array<string>
+          return langs.includes('zh')
         }
+
+        // no langs set
+        const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
+        return regex.test(create.record.text)
+      }).filter((create) => {
+        // special rule for bot
+        if (cached.bot_list.includes(create.author) && notChinaExternalURL(create)) {
+          return false
+        }
+        return true
       })
+
+    let modImagePosts: any[] = []
+    let createPosts: any[] = []
+    for(let post of postsToCreate) {
+      console.log(`post: ${ JSON.stringify(post) }`)
+      if (cached.author_category.hasOwnProperty(post.author)) {
+        createPosts.push({
+          uri: post.uri,
+          cid: post.cid,
+          indexedAt: new Date().toISOString()
+        })
+        continue
+      }
+
+      if (post.record?.embed?.images) {
+        const images = post.record.embed.images as Array<any>
+        const imgLinks = images.map(item => {
+          `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${item.image.ref.$link}`
+        })
+        console.log(`img links: ${ imgLinks }`)
+        modImagePosts.push({
+          uri: post.uri,
+          cid: post.cid,
+          indexedAt: new Date().toISOString(),
+          author: post.author,
+          imgUrls: imgLinks.join()
+        })
+        continue
+      }
+
+      if (post.record?.embed?.video) {
+        const video = post.record.embed.video as any
+        modImagePosts.push({
+          uri: post.uri,
+          cid: post.cid,
+          indexedAt: new Date().toISOString(),
+          author: post.author,
+          imgUrls: `https://video.bsky.app/watch/${post.author}/${video.ref.$link}/thumbnail.jpg`
+        })
+        continue
+      }
+
+      if (post.record?.embed?.external) {
+        const external = post.record.embed.external as any
+        if (external?.thumb) {
+          modImagePosts.push({
+            uri: post.uri,
+            cid: post.cid,
+            indexedAt: new Date().toISOString(),
+            author: post.author,
+            imgUrls: `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${external.thumb.ref.$link}`
+          })
+          continue
+        }
+      }
+
+      createPosts.push({
+        uri: post.uri,
+        cid: post.cid,
+        indexedAt: new Date().toISOString()
+      })
+    }
+
+    // log info
+    createPosts.forEach(item => console.log(`create post: ${ JSON.stringify(item) }`))
+    modImagePosts.forEach(item => console.log(`mod post: ${ JSON.stringify(item) }`))
 
     if (postsToDelete.length > 0) {
       await this.db
@@ -45,10 +113,17 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         .where('uri', 'in', postsToDelete)
         .execute()
     }
+    if (modImagePosts.length > 0) {
+      await this.db
+        .insertInto('mod_image_post')
+        .values(modImagePosts)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+    }
     if (postsToCreate.length > 0) {
       await this.db
         .insertInto('post')
-        .values(postsToCreate)
+        .values(createPosts)
         .onConflict((oc) => oc.doNothing())
         .execute()
     }
