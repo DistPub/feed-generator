@@ -57,9 +57,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       if (post.record?.embed?.images) {
         const images = post.record.embed.images as Array<any>
         const imgLinks = images.map(item => {
-          `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${item.image.ref.$link}`
+          return `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${item.image.ref}`
         })
-        console.log(`img links: ${ imgLinks }`)
         modImagePosts.push({
           uri: post.uri,
           cid: post.cid,
@@ -77,7 +76,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           cid: post.cid,
           indexedAt: new Date().toISOString(),
           author: post.author,
-          imgUrls: `https://video.bsky.app/watch/${post.author}/${video.ref.$link}/thumbnail.jpg`
+          imgUrls: `https://video.bsky.app/watch/${post.author}/${video.ref}/thumbnail.jpg`
         })
         continue
       }
@@ -90,7 +89,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
             cid: post.cid,
             indexedAt: new Date().toISOString(),
             author: post.author,
-            imgUrls: `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${external.thumb.ref.$link}`
+            imgUrls: `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${external.thumb.ref}`
           })
           continue
         }
@@ -120,7 +119,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         .onConflict((oc) => oc.doNothing())
         .execute()
     }
-    if (postsToCreate.length > 0) {
+    if (createPosts.length > 0) {
       await this.db
         .insertInto('post')
         .values(createPosts)
