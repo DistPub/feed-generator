@@ -45,7 +45,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     let createPosts: any[] = []
     for(let post of postsToCreate) {
       console.log(`post: ${ JSON.stringify(post) }`)
-      if (cached.author_category.hasOwnProperty(post.author)) {
+      if (cached.author_category.hasOwnProperty(post.author) || post.record?.labels) {
         createPosts.push({
           uri: post.uri,
           cid: post.cid,
