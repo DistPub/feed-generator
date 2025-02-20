@@ -1,0 +1,17 @@
+{
+  "lexicon": 1,
+  "id": "com.hukoubook.fg.defs",
+  "defs": {
+    "modImagePostView": {
+      "type": "object",
+      "properties": {
+        "uri": { "type": "string", "format": "at-uri" },
+        "cid": { "type": "string", "format": "cid" },
+        "indexedAt": { "type": "string" },
+        "author": { "type": "string" },
+        "imgUrls": { "type": "string" }
+      },
+      "required": ["uri", "cid", "indexedAt", "author", "imgUrls"]
+    }
+  }
+}

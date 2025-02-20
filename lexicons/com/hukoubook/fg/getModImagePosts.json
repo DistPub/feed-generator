@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.hukoubook.fg.getModImagePosts",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "get all mod image posts from db",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["mod"],
+          "properties": {
+            "mod": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "com.hukoubook.fg.defs#modImagePostView" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
