@@ -11,12 +11,13 @@
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
     "unpublishFeed": "ts-node scripts/unpublishFeedGen.ts",
     "start": "ts-node src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "codegen": "find lexicons -name '*.json'|xargs npx lex gen-server --yes src/lexicon"
   },
   "dependencies": {
     "@atproto/api": "^0.13.28",
     "@atproto/identity": "^0.2.1",
-    "@atproto/lex-cli": "^0.6.1",
+    "@atproto/lex-cli": "0.5.7",
     "@atproto/lexicon": "^0.2.2",
     "@atproto/repo": "^0.3.2",
     "@atproto/syntax": "^0.1.2",

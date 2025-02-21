@@ -117,13 +117,13 @@
     "@atproto/crypto" "^0.3.0"
     axios "^0.27.2"
 
-"@atproto/lex-cli@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@atproto/lex-cli/-/lex-cli-0.6.1.tgz#e5849c16b37efd9748fca34119d7031d5e4a657c"
-  integrity sha512-fUZSx/l8J50Nxe9J/bF996PjV79oUmkShNewNvbuYgsOVZJtO3gu9jPMYX8+bhJ4eQkCwHbm8edVQDJx5rW3eg==
+"@atproto/lex-cli@0.5.7":
+  version "0.5.7"
+  resolved "https://registry.npmmirror.com/@atproto/lex-cli/-/lex-cli-0.5.7.tgz#125b42301f3c14399b2293a4170b8a10efc44b72"
+  integrity sha512-V5rsU95Th57KICxUGwTjudN5wmFBHL/fLkl7banl6izsQBiUrVvrj3EScNW/Wx2PnwlJwxtTpa1rTnP30+i5/A==
   dependencies:
-    "@atproto/lexicon" "^0.4.7"
-    "@atproto/syntax" "^0.3.3"
+    "@atproto/lexicon" "^0.4.6"
+    "@atproto/syntax" "^0.3.2"
     chalk "^4.1.2"
     commander "^9.4.0"
     prettier "^3.2.5"
@@ -164,9 +164,9 @@
     multiformats "^9.9.0"
     zod "^3.23.8"
 
-"@atproto/lexicon@^0.4.7":
+"@atproto/lexicon@^0.4.6":
   version "0.4.7"
-  resolved "https://registry.yarnpkg.com/@atproto/lexicon/-/lexicon-0.4.7.tgz#f5d31615c21bcfd3e655f1e4f11a40a62fea9f86"
+  resolved "https://registry.npmmirror.com/@atproto/lexicon/-/lexicon-0.4.7.tgz#f5d31615c21bcfd3e655f1e4f11a40a62fea9f86"
   integrity sha512-/x6h3tAiDNzSi4eXtC8ke65B7UzsagtlGRHmUD95698x5lBRpDnpizj0fZWTZVYed5qnOmz/ZEue+v3wDmO61g==
   dependencies:
     "@atproto/common-web" "^0.4.0"
@@ -211,7 +211,7 @@
   resolved "https://registry.yarnpkg.com/@atproto/syntax/-/syntax-0.3.1.tgz#4346418728f9643d783d2ffcf7c77e132e1f53d4"
   integrity sha512-fzW0Mg1QUOVCWUD3RgEsDt6d1OZ6DdFmbKcDdbzUfh0t4rhtRAC05KbZYmxuMPWDAiJ4BbbQ5dkAc/mNypMXkw==
 
-"@atproto/syntax@^0.3.3":
+"@atproto/syntax@^0.3.2", "@atproto/syntax@^0.3.3":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@atproto/syntax/-/syntax-0.3.3.tgz#6debe8983985378104822172a128e429931bf3f7"
   integrity sha512-F1LZweesNYdBbZBXVa72N/cSvchG8Q1tG4/209ZXbIuM3FwQtkgn+zgmmV4P4ORmhOeXPBNXvMBpcqiwx/gEQQ==

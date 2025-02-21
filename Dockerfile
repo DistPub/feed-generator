@@ -6,10 +6,10 @@ ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 ENTRYPOINT ["dumb-init", "--"]
 
 WORKDIR /app
-COPY package.json yarn.lock /app 
+COPY package.json yarn.lock /app
 RUN yarn install
 COPY . /app
-RUN yarn build
+RUN yarn codegen && yarn build
 EXPOSE 3001
 ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
