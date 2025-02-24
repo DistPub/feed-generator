@@ -3,7 +3,7 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType, cached, CreateOp } from './util/subscription'
-import { isBot } from './bw'
+import { isBot, isNSFW } from './bw'
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
@@ -44,62 +44,45 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     let modImagePosts: any[] = []
     let createPosts: any[] = []
     for(let post of postsToCreate) {
-      console.log(`post: ${ JSON.stringify(post) }`)
-      if (cached.author_category.hasOwnProperty(post.author) || post.record?.labels) {
-        createPosts.push({
-          uri: post.uri,
-          cid: post.cid,
-          indexedAt: new Date().toISOString()
-        })
-        continue
-      }
-
+      let imgUrls: any = null
       if (post.record?.embed?.images) {
         const images = post.record.embed.images as Array<any>
         const imgLinks = images.map(item => {
           return `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${item.image.ref}`
         })
-        modImagePosts.push({
-          uri: post.uri,
-          cid: post.cid,
-          indexedAt: new Date().toISOString(),
-          author: post.author,
-          imgUrls: imgLinks.join()
-        })
-        continue
+        imgUrls = imgLinks.join()
       }
 
-      if (post.record?.embed?.video) {
+      else if (post.record?.embed?.video) {
         const video = post.record.embed.video as any
-        modImagePosts.push({
-          uri: post.uri,
-          cid: post.cid,
-          indexedAt: new Date().toISOString(),
-          author: post.author,
-          imgUrls: `https://video.bsky.app/watch/${post.author}/${video.ref}/thumbnail.jpg`
-        })
-        continue
+        imgUrls = `https://video.bsky.app/watch/${post.author}/${video.ref}/thumbnail.jpg`
       }
 
-      if (post.record?.embed?.external) {
+      else if (post.record?.embed?.external) {
         const external = post.record.embed.external as any
         if (external?.thumb) {
+          imgUrls = `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${external.thumb.ref}`
+        }
+      }
+
+      if (imgUrls) {
+        let nsfw = await isNSFW(post.author)
+        if (nsfw === -1) {
           modImagePosts.push({
             uri: post.uri,
             cid: post.cid,
             indexedAt: new Date().toISOString(),
             author: post.author,
-            imgUrls: `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${external.thumb.ref}`
+            imgUrls
           })
-          continue
         }
+      } else {
+        createPosts.push({
+          uri: post.uri,
+          cid: post.cid,
+          indexedAt: new Date().toISOString()
+        })
       }
-
-      createPosts.push({
-        uri: post.uri,
-        cid: post.cid,
-        indexedAt: new Date().toISOString()
-      })
     }
 
     // log info

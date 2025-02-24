@@ -64,3 +64,22 @@ export async function isBot(did: string) {
     await putBW([ret])
     return ret.bot
 }
+
+export async function isNSFW(did: string) {
+    // try cache
+    let ret = await getBW(did)
+    let aturi = `at://${did}/app.bsky.feed.post/*`
+    let response = await fetch(`https://mod.bsky.app/xrpc/com.atproto.label.queryLabels?uriPatterns=${aturi}&limit=1`)
+    let data = await response.json() as any
+    let nsfw = 0
+    if (data.labels.length) nsfw = 1
+    let cached_not_equal = ret.nsfw !== -1 && ret.nsfw != nsfw
+    let no_cache_is_black = ret.nsfw === -1 && nsfw === 1
+    
+    if (cached_not_equal || no_cache_is_black) {
+        ret.nsfw = nsfw
+        await putBW([ret])
+        return nsfw
+    }
+    return -1
+}
