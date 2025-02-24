@@ -27,7 +27,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         // langs exists
         if (create.record?.langs) {
           let langs = create.record.langs as Array<string>
-          return langs.includes('zh')
+          return langs.includes('zh') && !langs.includes('ko') && !langs.includes('ja')
         }
 
         // no langs set
