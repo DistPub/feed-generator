@@ -10,8 +10,7 @@ import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
 import wellKnown from './well-known'
-import { cached } from './util/subscription'
-import { initDBPool } from './dbpool'
+import { initDBPool, deleteDB, syncDBFile } from './dbpool'
 
 export class FeedGenerator {
   public app: express.Application
@@ -33,14 +32,13 @@ export class FeedGenerator {
   }
 
   static create(cfg: Config) {
-    // FeedGenerator.sync_blocked_users()
     const app = express()
     const db = createDb(cfg.sqliteLocation)
     const firehose = new FirehoseSubscription(db, cfg.subscriptionEndpoint)
 
     const didCache = new MemoryCache()
     const didResolver = new DidResolver({
-      plcUrl: 'https://plc.directory',
+      plcUrl: process.env.PLC_URL,
       didCache,
     })
 
@@ -62,48 +60,34 @@ export class FeedGenerator {
     modImagePost(server, ctx)
     app.use(server.xrpc.router)
     app.use(wellKnown(ctx))
-
-    // setInterval(FeedGenerator.sync_blocked_users, 60*60000);
-    setInterval(async function() {
-      await db
-        .deleteFrom('post')
-        .where('indexedAt', '<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
-        .execute()
-    }, 60*60000)
-
     return new FeedGenerator(app, db, firehose, cfg)
   }
 
-  static sync_blocked_users() {
-    let list_keys = ['3lbhma4rx4k2o', '3lbfa5esptk2s', '3lbeeyopvnk2s']
-    Promise.all(list_keys.map(
-      list_key => FeedGenerator.fetch_list_users(`at://did:web:smite.hukoubook.com/app.bsky.graph.list/${list_key}`)
-    )).then(
-      user_list => cached.blocked_users = user_list.flat()
-    ).catch(
-      error => console.log(`errro when fetch blocked users: ${error}`)
-    )
-  }
-
-  static async fetch_list_users(uri: string, cursor?: string | null): Promise<string[]> {
-    let query = `list=${encodeURIComponent(uri)}&limit=100`
-    if (cursor) query = `${query}&cursor=${cursor}`
-    let url = `https://public.api.bsky.app/xrpc/app.bsky.graph.getList?${query}`
-    let response = await fetch(url)
-    if (!response.ok) throw Error(`failed fetch list users: ${url} response not ok`)
-    let data: any = await response.json()
-    let users = data.items.map(item=>item.subject.did)
-    if (data.cursor) users = users.concat(await FeedGenerator.fetch_list_users(uri, data.cursor))
-    console.log(`success fetch list users: ${url} total ${users.length}`)
-    return users
+  setupDBMantainInterval() {
+    setInterval(async function() {
+      await this.db
+        .deleteFrom('post')
+        .where('indexedAt', '<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
+        .execute()
+      await this.db
+        .deleteFrom('mod_image_post')
+        .where('indexedAt', '<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
+        .execute()
+      await syncDBFile()
+    }, 60*60000)
+    setInterval(async function() {
+      await deleteDB()
+    }, 24*60*60000)
   }
 
   async start(): Promise<http.Server> {
     await initDBPool()
+    await syncDBFile()
     await migrateToLatest(this.db)
     this.firehose.run(this.cfg.subscriptionReconnectDelay)
     this.server = this.app.listen(this.cfg.port, this.cfg.listenhost)
     await events.once(this.server, 'listening')
+    this.setupDBMantainInterval()
     return this.server
   }
 }

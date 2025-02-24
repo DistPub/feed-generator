@@ -1,21 +1,26 @@
 import SqliteDb from 'better-sqlite3'
 import { Kysely, Migrator, SqliteDialect } from 'kysely'
 
-export type Database = Kysely<DatabaseSchema>
+type Database = Kysely<DatabaseSchema>
 
 // schema
-
-export type BlackWhite = {
+type BlackWhite = {
     did: string
     bot: number
     nsfw: number
 }
-
-export type DatabaseSchema = {
-    black_white: BlackWhite
+type NotChineseWebsite = {
+  hostname: string
 }
-
-export const createDb = (location: string): Database => {
+type NotGoodUser = {
+  did: string
+}
+type DatabaseSchema = {
+    black_white: BlackWhite
+    not_chinese_website: NotChineseWebsite
+    not_good_user: NotGoodUser
+}
+const createDb = (location: string): Database => {
   return new Kysely<DatabaseSchema>({
     dialect: new SqliteDialect({
       database: new SqliteDb(location),
@@ -23,16 +28,15 @@ export const createDb = (location: string): Database => {
   })
 }
 
+// migrate
 import { Migration, MigrationProvider } from 'kysely'
 
 const migrations: Record<string, Migration> = {}
-
-export const migrationProvider: MigrationProvider = {
+const migrationProvider: MigrationProvider = {
   async getMigrations() {
     return migrations
   },
 }
-
 migrations['001'] = {
   async up(db: Kysely<unknown>) {
     await db.schema
@@ -48,7 +52,6 @@ migrations['001'] = {
 }
 
 // business
-
 let dbpool = {}
 
 export function formatDate(date) {
@@ -74,7 +77,7 @@ export async function initDBPool() {
   console.log(`complete init db pool`)
 }
 
-export async function getDB(key: string) {
+export async function getDB(key: string, migrate: boolean = true) {
     if (dbpool.hasOwnProperty(key)) {
         return dbpool[key]
     }
@@ -82,8 +85,70 @@ export async function getDB(key: string) {
     let db = createDb(`bw${key}.db`)
     console.log(`set db to pool key ${key}`)
     dbpool[key] = db
-    const migrator = new Migrator({ db, provider: migrationProvider })
-    const { error } = await migrator.migrateToLatest()
-    if (error) throw error
+
+    if (migrate) {
+      const migrator = new Migrator({ db, provider: migrationProvider })
+      const { error } = await migrator.migrateToLatest()
+      if (error) throw error
+    }
     return db
+}
+
+import * as fs from 'fs';
+
+export async function deleteDB() {
+  let today = new Date()
+  let key = formatDate(getOffsetDate(today, 7))
+  if (dbpool.hasOwnProperty(key)) {
+      let db = dbpool[key]
+      await db.close()
+  }
+  if (fs.existsSync(key)) fs.unlinkSync(key)
+}
+
+import * as https from 'https'
+
+function downloadFile(url, savePath) {
+  console.log(`download file from ${url} to ${savePath}`)
+  const writeStream = fs.createWriteStream(savePath);
+
+  return new Promise((resolve, reject) => {
+      https.get(url, (response) => {
+          if (response.statusCode !== 200) {
+              reject(new Error(`Download failed with status code: ${response.statusCode}`));
+              return;
+          }
+
+          response.pipe(writeStream);
+          writeStream.on('finish', () => {
+              console.log(`success write to file`)
+              writeStream.close();
+              resolve(writeStream);
+          });
+          writeStream.on('error', (err) => {
+              console.log(`failed write to file ${err}`)
+              fs.unlinkSync(savePath)
+              reject(err);
+          });
+      }).on('error', (err) => {
+          console.error(`https get error ${err}`)
+          fs.unlinkSync(savePath)
+          reject(err);
+      });
+  });
+}
+
+export async function syncDBFile() {
+  let synckey = 'sync.db'
+  await downloadFile(process.env.NOT_DB_URL, synckey);
+
+  // close old, active new
+  let key = 'not.db'
+  if (dbpool.hasOwnProperty(key)) {
+      let db = dbpool[key]
+      await db.close()
+  }
+  if (fs.existsSync(key)) fs.unlinkSync(key)
+  fs.renameSync(synckey, key)
+  await getDB(key, false)
 }
