@@ -67,7 +67,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
       if (imgUrls) {
         let nsfw = await isNSFW(post.author)
-        if (nsfw === -1) {
+        if (nsfw === -1 && !post.record?.labels?.length) {
           modImagePosts.push({
             uri: post.uri,
             cid: post.cid,
