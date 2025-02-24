@@ -3,14 +3,7 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType, cached, CreateOp } from './util/subscription'
-import { Record as PostRecord } from './lexicon/types/app/bsky/feed/post'
-
-function notChinaExternalURL(post: CreateOp<PostRecord>) {
-  let external = post.record?.embed?.external as any
-  if (!external) return false
-  let url = new URL(external.uri)
-  return cached.not_china_domain.includes(url.hostname)
-}
+import { isBot } from './bw'
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
@@ -33,12 +26,19 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         // no langs set
         const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
         return regex.test(create.record.text)
-      }).filter((create) => {
-        // special rule for bot
-        if (cached.bot_list.includes(create.author) && notChinaExternalURL(create)) {
+      }).filter(async (create) => {
+        let bot = await isBot(create.author)
+
+        if (bot !== 1) return true
+
+        // no external
+        if (!create.record?.embed?.external) {
           return false
         }
-        return true
+
+        let external = create.record.embed.external as any
+        let url = new URL(external.uri)
+        return !cached.not_china_domain.includes(url.hostname)
       })
 
     let modImagePosts: any[] = []

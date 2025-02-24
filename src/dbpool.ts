@@ -66,10 +66,12 @@ export function getOffsetDate(date, offset) {
 }
 
 export async function initDBPool() {
-    let today = new Date()
-    for (let offset of [0, 1, 2, 3, 4, 5, 6]) {
-        await getDB(formatDate(getOffsetDate(today, offset)))
-    }
+  console.log(`init db pool`)
+  let today = new Date()
+  for (let offset of [0, 1, 2, 3, 4, 5, 6]) {
+      await getDB(formatDate(getOffsetDate(today, offset)))
+  }
+  console.log(`complete init db pool`)
 }
 
 export async function getDB(key: string) {
@@ -77,9 +79,11 @@ export async function getDB(key: string) {
         return dbpool[key]
     }
 
-    dbpool[key] = createDb(`bw${key}.db`)
-    const migrator = new Migrator({ db: dbpool[key], provider: migrationProvider })
+    let db = createDb(`bw${key}.db`)
+    console.log(`set db to pool key ${key}`)
+    dbpool[key] = db
+    const migrator = new Migrator({ db, provider: migrationProvider })
     const { error } = await migrator.migrateToLatest()
     if (error) throw error
-    return dbpool[key]
+    return db
 }
