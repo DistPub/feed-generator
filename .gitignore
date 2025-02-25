@@ -1,6 +1,7 @@
 src/lexicon
 bw*.db
 sync.db
+not.db
 
 # Logs
 logs

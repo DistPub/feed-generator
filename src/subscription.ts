@@ -3,7 +3,9 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType, cached, CreateOp } from './util/subscription'
-import { isBot, isNSFW } from './bw'
+import { isBot, isNSFW, isNotChineseWebsite } from './bw'
+
+const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
@@ -24,7 +26,6 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         }
 
         // no langs set
-        const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
         return regex.test(create.record.text)
       }).filter(async (create) => {
         let bot = await isBot(create.author)
@@ -37,8 +38,14 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         }
 
         let external = create.record.embed.external as any
+        let content = external.title + external.description
+
+        if (!regex.test(content)) {
+          return false
+        }
+
         let url = new URL(external.uri)
-        return !cached.not_china_domain.includes(url.hostname)
+        return !isNotChineseWebsite(url.hostname)
       })
 
     let modImagePosts: any[] = []

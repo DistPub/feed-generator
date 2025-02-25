@@ -83,3 +83,12 @@ export async function isNSFW(did: string) {
     }
     return -1
 }
+
+export async function isNotChineseWebsite(hostname: string) {
+    let db = await getDB('not.db')
+    let rows = await db.selectFrom('not_chinese_website')
+    .selectAll()
+    .where('not_chinese_website.hostname', '=', hostname)
+    .execute()
+    return rows.length
+}
