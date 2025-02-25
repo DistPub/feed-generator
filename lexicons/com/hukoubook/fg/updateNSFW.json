@@ -1,0 +1,39 @@
+{
+    "lexicon": 1,
+    "id": "com.hukoubook.fg.updateNSFW",
+    "defs": {
+      "main": {
+        "type": "procedure",
+        "description": "update black white list nsfw category for related authors, and move post from mod db to post db",
+        "input": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["categories", "move"],
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": { "type": "ref", "ref": "com.hukoubook.fg.defs#nsfwCategoryAuthorView" }
+                },
+                "move": {
+                    "type": "boolean"
+                }
+            }
+          }
+        },
+        "output": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["message"],
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  

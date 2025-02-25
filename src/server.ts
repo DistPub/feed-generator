@@ -64,7 +64,7 @@ export class FeedGenerator {
   }
 
   setupDBMantainInterval() {
-    setInterval(async function() {
+    setInterval(async () => {
       await this.db
         .deleteFrom('post')
         .where('indexedAt', '<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
@@ -75,7 +75,7 @@ export class FeedGenerator {
         .execute()
       await syncDBFile()
     }, 60*60000)
-    setInterval(async function() {
+    setInterval(async () => {
       await deleteDB()
     }, 24*60*60000)
   }

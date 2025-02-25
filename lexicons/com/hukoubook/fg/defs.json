@@ -2,13 +2,21 @@
   "lexicon": 1,
   "id": "com.hukoubook.fg.defs",
   "defs": {
+    "nsfwCategoryAuthorView": {
+      "type": "object",
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "category": { "type": "integer", "enum": [1, 0] }
+      },
+      "required": ["did", "category"]
+    },
     "modImagePostView": {
       "type": "object",
       "properties": {
         "uri": { "type": "string", "format": "at-uri" },
         "cid": { "type": "string", "format": "cid" },
         "indexedAt": { "type": "string" },
-        "author": { "type": "string" },
+        "author": { "type": "string", "format": "did" },
         "imgUrls": { "type": "string" }
       },
       "required": ["uri", "cid", "indexedAt", "author", "imgUrls"]

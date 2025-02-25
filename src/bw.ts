@@ -1,6 +1,6 @@
 import { formatDate, getDB, getOffsetDate } from './dbpool'
 
-async function getBW(did: string) {
+export async function getBW(did: string) {
     let today = new Date()
     const query = async (db) => {
         return await (db.selectFrom('black_white')
@@ -27,7 +27,7 @@ async function getBW(did: string) {
     return {did, bot: -1, nsfw: -1}
 }
 
-async function putBW(values: any) {
+export async function putBW(values: any) {
     let today = new Date()
     let db = await getDB(formatDate(today))
     await (db.insertInto('black_white')
