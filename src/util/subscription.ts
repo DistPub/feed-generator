@@ -18,13 +18,14 @@ export abstract class FirehoseSubscriptionBase {
   public sub: Subscription<RepoEvent>
 
   constructor(public db: Database, public service: string) {
-    let socks_proxy = process.env.socks_proxy
+    let socks_proxy = process.env.SOCKS_PROXY
     let agent: SocksProxyAgent | null = null
     if (socks_proxy) {
       console.log(`use agent:${ socks_proxy } to connect subscription`)
       agent = new SocksProxyAgent(socks_proxy)
     }
     this.sub = new Subscription({
+      heartbeatIntervalMs: process.env.HEARTBEAT_TIME,
       agent: agent,
       service: service,
       method: ids.ComAtprotoSyncSubscribeRepos,

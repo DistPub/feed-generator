@@ -16,18 +16,16 @@ export default function (server: Server, ctx: AppContext) {
   })
   server.com.hukoubook.fg.updateNSFW(async ({ input }) => {
     const {categories, move} = input.body
-    let rets = categories.map(async item => {
+    let rets: any = []
+    for (let item of categories) {
       let record = await getBW(item.did)
       record.nsfw = item.category
-      return record
-    })
-    try {
+      rets.push(record)
+    }
     await putBW(rets)
-    } catch (error) {console.error(error)}
-    console.log('in here')
 
     let authors = rets.map((item: any) => item.did)
-    
+
     // feed mod callback
     if (move) {
       await ctx.db.insertInto('post')
