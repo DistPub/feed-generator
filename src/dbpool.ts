@@ -78,7 +78,7 @@ export async function initDBPool() {
 }
 
 export async function getDB(name: string, migrate: boolean = true, genname: boolean = true) {
-    let key = name  
+    let key = name
     if (genname) {
         key = `bw${key}.db`
     }
@@ -103,9 +103,10 @@ import * as fs from 'fs';
 export async function deleteDB() {
   let today = new Date()
   let key = formatDate(getOffsetDate(today, 7))
+  key = `bw${key}.db`
   if (dbpool.hasOwnProperty(key)) {
       let db = dbpool[key]
-      await db.close()
+      await db.destroy()
   }
   if (fs.existsSync(key)) fs.unlinkSync(key)
 }
@@ -150,9 +151,14 @@ export async function syncDBFile() {
   let key = 'not.db'
   if (dbpool.hasOwnProperty(key)) {
       let db = dbpool[key]
-      await db.close()
+      await db.destroy()
   }
-  if (fs.existsSync(key)) fs.unlinkSync(key)
-  fs.renameSync(synckey, key)
+
+  try {
+    if (fs.existsSync(key)) fs.unlinkSync(key)
+    fs.renameSync(synckey, key)
+  } catch(error) {
+    console.log(error)
+  }
   await getDB(key, false, false)
 }

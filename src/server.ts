@@ -81,6 +81,7 @@ export class FeedGenerator {
   }
 
   async start(): Promise<http.Server> {
+    await deleteDB()
     await initDBPool()
     await syncDBFile()
     await migrateToLatest(this.db)
