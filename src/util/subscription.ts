@@ -197,21 +197,3 @@ const fixBlobRefs = (obj: unknown): unknown => {
   }
   return obj
 }
-
-type Cached = {
-  blocked_users: string[],
-  bot_list: string[],
-  not_china_domain: string[],
-  author_category: {
-    [k: string]: string
-  }
-}
-
-export const cached: Cached = {
-  blocked_users: [],
-  author_category: {},
-  bot_list: [],
-  not_china_domain: [
-    'www.bbc.com'
-  ],
-}

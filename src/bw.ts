@@ -52,6 +52,7 @@ export async function isBot(did: string) {
 
     // compute
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getAuthorFeed?actor=${did}&filter=posts_no_replies&includePins=false&limit=30`
+    console.log(`check bot fetch url: ${url}`)
     let response = await fetch(url)
     let data = await response.json() as any
     if (data.error || data.feed.length < 2) {
@@ -69,7 +70,9 @@ export async function isNSFW(did: string) {
     // try cache
     let ret = await getBW(did)
     let aturi = `at://${did}/app.bsky.feed.post/*`
-    let response = await fetch(`${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${aturi}&limit=1`)
+    let url = `${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${encodeURIComponent(aturi)}&limit=1`
+    console.log(`check nsfw fetch url: ${url}`)
+    let response = await fetch(url)
     let data = await response.json() as any
     let nsfw = 0
     if (data.labels.length) nsfw = 1
@@ -91,7 +94,7 @@ export async function isNotChineseWebsite(hostname: string) {
     const tld = parts.pop() as string
     if (!cntld.includes(tld) && cctld.includes(tld)) return true
 
-    let db = await getDB('not.db')
+    let db = await getDB('not.db', false, false)
     let rows = await db.selectFrom('not_chinese_website')
     .selectAll()
     .where('not_chinese_website.hostname', '=', hostname)

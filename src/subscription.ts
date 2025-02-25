@@ -2,7 +2,7 @@ import {
   OutputSchema as RepoEvent,
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
-import { FirehoseSubscriptionBase, getOpsByType, cached, CreateOp } from './util/subscription'
+import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 import { isBot, isNSFW, isNotChineseWebsite } from './bw'
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;

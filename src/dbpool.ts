@@ -77,12 +77,16 @@ export async function initDBPool() {
   console.log(`complete init db pool`)
 }
 
-export async function getDB(key: string, migrate: boolean = true) {
+export async function getDB(name: string, migrate: boolean = true, genname: boolean = true) {
+    let key = name  
+    if (genname) {
+        key = `bw${key}.db`
+    }
     if (dbpool.hasOwnProperty(key)) {
         return dbpool[key]
     }
 
-    let db = createDb(`bw${key}.db`)
+    let db = createDb(key)
     console.log(`set db to pool key ${key}`)
     dbpool[key] = db
 
@@ -150,5 +154,5 @@ export async function syncDBFile() {
   }
   if (fs.existsSync(key)) fs.unlinkSync(key)
   fs.renameSync(synckey, key)
-  await getDB(key, false)
+  await getDB(key, false, false)
 }
