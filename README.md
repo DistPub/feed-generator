@@ -38,18 +38,17 @@
 2. 有结果，将结果存到bw{today}.db，返回结果
 3. 定时任务，每天执行1次，删除bw{today-7}.db
 
-### 社区类网站或非中国网站黑名单
+### 社区类网站或非中国网站判断
 
-此类网站无法判定数据来源或数据来源于外国人，硬编码在pastebin，启动时加载到内存
+此类网站无法判定数据来源或数据来源于外国人
 
-e.g.
-```
-youtube.com
-x.com
-threads.net
-```
+1. 基于国别域名后缀判断
+2. 如果是非中国国别域名，过滤
+3. 检查not.db中非中国网站名单，有结果过滤
+4. 其他情况则不是
 
-0. 定时任务，每隔1h执行get pastebin
+> not.db由gh actions生成, 非中国网站名单在pastbin维护
+0. 定时任务，每隔1h执行get not.db
 
 ### nsfw复核流程
 
@@ -61,7 +60,19 @@ threads.net
 6. 审核结果存到bw{today}.db
 8. 从mod库复制数据到post库，然后删除mod库中数据
 
-### report流程
+### labeler服务
+
+基于 not.db bw{time}.db 对外发布标记
+
+1. 噪声用户 (由@smitechow.com提供列表【不科学，不合法，不主流】，gh actions更新到not.db)
+2. 机器人 (由feed流事实生成【发言频率间隔<1h】，存储在bw{time}.db)
+3. 不是机器人 (由feed流事实生成【发言频率间隔>=1h】，存储在bw{time}.db)
+3. NSFW群体 (由feed流事实生成【发表过nsfw图片】，存储在bw{time}.db)
+3. 不是NSFW群体 (由feed流事实生成【发表过normal图片】，存储在bw{time}.db)
+
+默认提供纯净版，即噪声用户，机器人，NSFW群体隐藏，不是机器人，不是NSFW群体忽略
+
+#### report流程
 
 1. 允许用户报告机器人和nsfw群体
 2. 报告机器人则走`机器人判定规则`，按照不在名单中执行
