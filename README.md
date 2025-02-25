@@ -70,7 +70,7 @@
 3. NSFW群体 (由feed流事实生成【发表过nsfw图片】，存储在bw{time}.db)
 3. 不是NSFW群体 (由feed流事实生成【发表过normal图片】，存储在bw{time}.db)
 
-默认提供纯净版，即噪声用户，机器人，NSFW群体隐藏，不是机器人，不是NSFW群体忽略
+默认提供纯净版，即噪声用户，NSFW群体隐藏，机器人警告，不是机器人，不是NSFW群体忽略
 
 #### report流程
 
