@@ -84,7 +84,13 @@ export async function isNSFW(did: string) {
     return -1
 }
 
+import { cntld, cctld } from './country'
+
 export async function isNotChineseWebsite(hostname: string) {
+    const parts = hostname.split('.');
+    const tld = parts.pop() as string
+    if (!cntld.includes(tld) && cctld.includes(tld)) return true
+
     let db = await getDB('not.db')
     let rows = await db.selectFrom('not_chinese_website')
     .selectAll()
