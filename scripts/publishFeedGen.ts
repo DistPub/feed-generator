@@ -63,8 +63,12 @@ const run = async () => {
       }
     ])
 
-  const { handle, password, recordName, displayName, description, avatar, service, videoOnly } = answers
-
+  let { handle, password, recordName, displayName, description, avatar, service, videoOnly } = answers
+  recordName = "china-good-voice"
+  displayName = "中国好声音"
+  description = "中国好声音\n12小时内最新中文动态(不含回复和转发)\nmade with 💖 by @smitechow.com\n\n中国好声音能够实时识别机器人和NSFW群体\n搭配中国好声音标签机 @cgv.hukoubook.com 您能够获得更加纯净的动态源体验"
+  avatar = 'a.jpeg'
+  
   const feedGenDid =
     process.env.FEEDGEN_SERVICE_DID ?? `did:web:${process.env.FEEDGEN_HOSTNAME}`
 
