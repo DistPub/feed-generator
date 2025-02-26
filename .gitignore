@@ -1,7 +1,5 @@
 src/lexicon
-bw*.db
-sync.db
-not.db
+*.db
 
 # Logs
 logs
