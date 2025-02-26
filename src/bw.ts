@@ -101,3 +101,12 @@ export async function isNotChineseWebsite(hostname: string) {
     .execute()
     return rows.length
 }
+
+export async function isNotGoodUser(did: string) {
+  let db = await getDB('not.db', false, false)
+  let rows = await db.selectFrom('not_good_user')
+  .selectAll()
+  .where('not_good_user.did', '=', did)
+  .execute()
+  return rows.length
+}
