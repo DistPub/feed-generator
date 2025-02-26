@@ -8,8 +8,10 @@ ENTRYPOINT ["dumb-init", "--"]
 WORKDIR /app
 COPY package.json yarn.lock /app
 RUN yarn install
-COPY . /app
-RUN yarn codegen && yarn build
+COPY lexicons /app/lexicons
+COPY src /app/src
+COPY tsconfig.json /app/
+RUN ls -al && yarn codegen && yarn build
 EXPOSE 3001
 ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
