@@ -77,16 +77,16 @@ export async function initDBPool() {
   console.log(`complete init db pool`)
 }
 
-export async function getDB(name: string, migrate: boolean = true, genname: boolean = true) {
+export async function getDB(name: string, migrate: boolean = true, genname: boolean = true, useCache: boolean = true) {
     let key = name
     if (genname) {
         key = `bw${key}.db`
     }
-    if (dbpool.hasOwnProperty(key)) {
+    if (useCache && dbpool.hasOwnProperty(key)) {
         return dbpool[key]
     }
 
-    let db = createDb(key)
+    let db = createDb(absKey(key))
     console.log(`set db to pool key ${key}`)
     dbpool[key] = db
 
@@ -107,8 +107,9 @@ export async function deleteDB() {
   if (dbpool.hasOwnProperty(key)) {
       let db = dbpool[key]
       await db.destroy()
+      delete dbpool[key]
   }
-  if (fs.existsSync(key)) fs.unlinkSync(key)
+  if (fs.existsSync(absKey(key))) fs.unlinkSync(absKey(key))
 }
 
 import * as https from 'https'
@@ -145,7 +146,7 @@ function downloadFile(url, savePath) {
 
 export async function syncDBFile() {
   let synckey = 'sync.db'
-  await downloadFile(process.env.NOT_DB_URL, synckey);
+  await downloadFile(process.env.NOT_DB_URL, absKey(synckey));
 
   // close old, active new
   let key = 'not.db'
@@ -155,10 +156,14 @@ export async function syncDBFile() {
   }
 
   try {
-    if (fs.existsSync(key)) fs.unlinkSync(key)
-    fs.renameSync(synckey, key)
+    if (fs.existsSync(absKey(key))) fs.unlinkSync(absKey(key))
+    fs.renameSync(absKey(synckey), absKey(key))
   } catch(error) {
     console.log(error)
   }
-  await getDB(key, false, false)
+  await getDB(key, false, false, false)
+}
+
+function absKey(key: string) {
+  return process.env.DB_HOME + key
 }

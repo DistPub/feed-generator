@@ -1,5 +1,6 @@
 src/lexicon
 *.db
+dbhome/*.db
 
 # Logs
 logs
