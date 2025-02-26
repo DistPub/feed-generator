@@ -1,6 +1,7 @@
 import { Server } from '../lexicon'
 import { AppContext } from '../config'
 import { getBW, isNotGoodUser } from '../bw'
+import { validateAuth } from '../auth'
 
 function getDid(uri: string) {
   if (uri.startsWith('at://')){
@@ -54,6 +55,43 @@ export default function (server: Server, ctx: AppContext) {
       body: {
         labels,
       },
+    }
+  })
+
+  server.com.atproto.label.subscribeLabels(async function* ({
+    params,
+    signal,
+  }) {
+    const { cursor } = params
+    yield await new Promise((resolve, reject) => {})
+  })
+
+  server.com.atproto.moderation.createReport(async ({ req, input }) => {
+    const requester = await validateAuth(req, ctx.cfg.serviceDid, ctx.didResolver)
+    const { reasonType, reason } = input.body
+    console.log(`${requester} report ${reasonType} with ${reason}`)
+    const subject = input.body.subject
+
+    if (reasonType === 'reasonOther' && reason === 'bot') {
+      // bot
+      console.log(`report bot`)
+    }
+
+    if (reasonType === 'reasonSexual' || (reasonType === 'reasonOther' && reason === 'nsfw')) {
+      // nsfw
+      console.log(`report nsfw`)
+    }
+
+    const body = {
+      "id": 100,
+      "reasonType": reasonType,
+      "subject": subject,
+      "reportedBy": requester,
+      "createdAt": new Date().toISOString()
+    }
+    return {
+      encoding: 'application/json',
+      body,
     }
   })
 }
