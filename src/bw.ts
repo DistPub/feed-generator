@@ -91,6 +91,11 @@ export async function isNSFW(did: string, useCache: boolean = true) {
         await putBW([ret])
         return nsfw
     }
+
+    if (useCache && ret.nsfw !== -1) {
+        return ret.nsfw
+    }
+    
     return -1
 }
 
