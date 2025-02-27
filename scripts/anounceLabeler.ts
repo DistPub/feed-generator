@@ -73,18 +73,16 @@ const run = async () => {
         }])
     token = tokeninput.token
   }
-  let services: any = [
-    {
-    "id": "#atproto_pds",
-    "type": "AtprotoPersonalDataServer",
-    "serviceEndpoint": "https://panus.us-west.host.bsky.network"
+  let services: any = {
+    "atproto_pds": {
+        "type": "AtprotoPersonalDataServer",
+        "serviceEndpoint": "https://panus.us-west.host.bsky.network"
     },
-    {
-    "id": "#atproto_labeler",
-    "type": "AtprotoLabeler",
-    "serviceEndpoint": labelerService
+    "atproto_labeler": {
+        "type": "AtprotoLabeler",
+        "serviceEndpoint": labelerService
     }
-  ]
+  }
   let r2 = await agent.com.atproto.identity.signPlcOperation({
     token,
     services,
