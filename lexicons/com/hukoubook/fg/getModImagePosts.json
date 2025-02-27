@@ -14,6 +14,10 @@
             "mod": {
               "type": "array",
               "items": { "type": "ref", "ref": "com.hukoubook.fg.defs#modImagePostView" }
+            },
+            "report": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "com.hukoubook.fg.defs#modImagePostView" }
             }
           }
         }

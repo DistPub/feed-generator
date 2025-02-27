@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
 
     return {
       encoding: 'application/json',
-      body: { mod: mod.concat(report) },
+      body: { mod, report },
     }
   })
   server.com.hukoubook.fg.updateNSFW(async ({ input }) => {
