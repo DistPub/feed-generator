@@ -3,6 +3,7 @@ import inquirer from 'inquirer'
 import { AtpAgent, BlobRef, AppBskyFeedDefs } from '@atproto/api'
 import fs from 'fs/promises'
 import { ids } from '../src/lexicon/lexicons'
+import * as plc from '@did-plc/lib'
 
 const run = async () => {
   dotenv.config()
@@ -36,10 +37,16 @@ const run = async () => {
           message: 'Optionally, enter a custom PDS service to sign in with:',
           default: 'https://bsky.social',
           required: false,
+        },
+        {
+            type: 'input',
+            name: 'token',
+            message: 'if you already got a token:',
+            required: false,
         }
     ])
 
-  let { handle, password, labelerService, service } = answers
+  let { handle, password, labelerService, service, token } = answers
   handle = 'china-good-voice.bsky.social'
   labelerService = 'https://feedg.hukoubook.com'
 
@@ -49,19 +56,23 @@ const run = async () => {
     handle
   })
   console.log(`resolved did: ${response.data.did}`)
-  let r1 = await agent.com.atproto.identity.requestPlcOperationSignature()
-  if (!r1.success) {
-    console.log('send token to email failed')
-    return
+  let did = response.data.did
+
+  if (!token) {
+    let r1 = await agent.com.atproto.identity.requestPlcOperationSignature()
+    if (!r1.success) {
+        console.log('send token to email failed')
+        return
+    }
+    let tokeninput = await inquirer
+        .prompt([{
+            type: 'input',
+            name: 'token',
+            message: 'Enter your email received token:',
+            required: true,
+        }])
+    token = tokeninput.token
   }
-  let tokeninput = await inquirer
-    .prompt([{
-        type: 'input',
-        name: 'token',
-        message: 'Enter your email received token:',
-        required: true,
-    }])
-  let {token} = tokeninput
   let services: any = [
     {
     "id": "#atproto_pds",
@@ -78,12 +89,10 @@ const run = async () => {
     token,
     services,
   })
-  let operation = r2.data.operation
+  let operation: any = r2.data.operation
   console.log(operation)
-  await agent.com.atproto.identity.submitPlcOperation({
-    operation
-  })
-
+  const plcClient = new plc.Client(process.env.PLC_URL as string)
+  await plcClient.sendOperation(did, operation)
   console.log('All done 🎉')
 }
 
