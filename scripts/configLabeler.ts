@@ -52,7 +52,7 @@ const run = async () => {
     "$type": "app.bsky.labeler.service",
     "policies": {
         "labelValues": ["not-good", "bot", "not-bot", "nsfw", "not-nsfw"],
-        "labelValueDefitions": [
+        "labelValueDefinitions": [
             {
                 "adultOnly": false,
                 "blurs": "none",
