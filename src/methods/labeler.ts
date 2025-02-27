@@ -103,7 +103,7 @@ export default function (server: Server, ctx: AppContext) {
           uri,
           cid
         }
-        let imgUrls = getPostImgurls(post)
+        let imgUrls = getPostImgurls(post, false)
 
         if (imgUrls && !post.record?.labels?.length) {
           ret = await isNSFW(post.author, false)

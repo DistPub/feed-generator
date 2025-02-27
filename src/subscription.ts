@@ -8,25 +8,25 @@ import { Record } from './lexicon/types/app/bsky/feed/post';
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
-export function getPostImgurls(post: CreateOp<Record>) {
+export function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolean = true) {
   let imgUrls: any = null
   if (post.record?.embed?.images) {
     const images = post.record.embed.images as Array<any>
     const imgLinks = images.map(item => {
-      return `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${item.image.ref}`
+      return `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${comeFromSub ? item.image.ref : item.image.ref.$link}`
     })
     imgUrls = imgLinks.join()
   }
 
   else if (post.record?.embed?.video) {
     const video = post.record.embed.video as any
-    imgUrls = `https://video.bsky.app/watch/${post.author}/${video.ref}/thumbnail.jpg`
+    imgUrls = `https://video.bsky.app/watch/${post.author}/${comeFromSub ? video.ref : video.ref.$link }/thumbnail.jpg`
   }
 
   else if (post.record?.embed?.external) {
     const external = post.record.embed.external as any
     if (external?.thumb) {
-      imgUrls = `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${external.thumb.ref}`
+      imgUrls = `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${comeFromSub ? external.thumb.ref : external.thumb.ref.$link}`
     }
   }
 
