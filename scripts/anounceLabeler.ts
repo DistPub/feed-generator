@@ -73,23 +73,20 @@ const run = async () => {
         }])
     token = tokeninput.token
   }
-  let services: any = {
-    "atproto_pds": {
-        "type": "AtprotoPersonalDataServer",
-        "serviceEndpoint": "https://panus.us-west.host.bsky.network"
-    },
-    "atproto_labeler": {
-        "type": "AtprotoLabeler",
-        "serviceEndpoint": labelerService
-    }
+  const plcClient = new plc.Client(process.env.PLC_URL as string)
+  let doc = await plcClient.getDocumentData(did)
+  let services = doc.services
+  services["atproto_labeler"] = {
+    "type": "AtprotoLabeler",
+    "endpoint": labelerService
   }
+  console.log(services)
   let r2 = await agent.com.atproto.identity.signPlcOperation({
     token,
     services,
   })
   let operation: any = r2.data.operation
   console.log(operation)
-  const plcClient = new plc.Client(process.env.PLC_URL as string)
   await plcClient.sendOperation(did, operation)
   console.log('All done 🎉')
 }
