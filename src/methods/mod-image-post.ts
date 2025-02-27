@@ -4,14 +4,19 @@ import { getBW, putBW } from '../bw'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.hukoubook.fg.getModImagePosts(async (_) => {
-    let builder = ctx.db
-      .selectFrom('mod_image_post')
-      .selectAll()
-    const mod = await builder.execute()
+    let mod = await ctx.db
+    .selectFrom('mod_image_post')
+    .selectAll()
+    .execute()
+
+    let report = await ctx.db
+    .selectFrom('report_image_post')
+    .selectAll()
+    .execute()
 
     return {
       encoding: 'application/json',
-      body: { mod },
+      body: { mod: mod.concat(report) },
     }
   })
   server.com.hukoubook.fg.updateNSFW(async ({ input }) => {
@@ -46,6 +51,9 @@ export default function (server: Server, ctx: AppContext) {
       .execute()
     } else {
       // user report callback
+      await ctx.db.deleteFrom('report_image_post')
+      .where('report_image_post.author', 'in', authors)
+      .execute()
     }
     return {
       encoding: 'application/json',

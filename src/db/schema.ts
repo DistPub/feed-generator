@@ -2,6 +2,7 @@ export type DatabaseSchema = {
   post: Post
   sub_state: SubState
   mod_image_post: ModImagePost
+  report_image_post: ReportImagePost
 }
 
 export type Post = {
@@ -16,6 +17,14 @@ export type SubState = {
 }
 
 export type ModImagePost = {
+  uri: string
+  cid: string
+  indexedAt: string
+  author: string
+  imgUrls: string
+}
+
+export type ReportImagePost = {
   uri: string
   cid: string
   indexedAt: string

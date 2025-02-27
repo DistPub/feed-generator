@@ -1,7 +1,10 @@
 import { Server } from '../lexicon'
 import { AppContext } from '../config'
-import { getBW, isNotGoodUser } from '../bw'
+import { getBW, isNotGoodUser, computeBot, isNSFW } from '../bw'
 import { validateAuth } from '../auth'
+import { CreateOp } from '../util/subscription'
+import { Record } from '../lexicon/types/app/bsky/feed/post'
+import { getPostImgurls } from '../subscription'
 
 function getDid(uri: string) {
   if (uri.startsWith('at://')){
@@ -70,20 +73,60 @@ export default function (server: Server, ctx: AppContext) {
     const requester = await validateAuth(req, ctx.cfg.serviceDid, ctx.didResolver)
     const { reasonType, reason } = input.body
     console.log(`${requester} report ${reasonType} with ${reason}`)
-    const subject = input.body.subject
+    const subject = input.body.subject as any
+    let { did, uri, cid } = subject
+    let ret = 100
+
 
     if (reasonType === 'reasonOther' && reason === 'bot') {
       // bot
-      console.log(`report bot`)
+      let target = getDid(did || uri)
+      let ret = await computeBot(target)
+      console.log(`report bot did: ${target} ret: ${ret}`)
     }
 
-    if (reasonType === 'reasonSexual' || (reasonType === 'reasonOther' && reason === 'nsfw')) {
+    else if (reasonType === 'reasonSexual' || (reasonType === 'reasonOther' && reason === 'nsfw')) {
       // nsfw
-      console.log(`report nsfw`)
+      if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
+        console.log(`report nsfw should from a app.bsky.feed.post record`)
+      } else {
+        console.log(`report nsfw uri: ${uri} cid: ${cid}`)
+        let response = await fetch(`${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getPostThread?uri=${encodeURIComponent(uri)}&depth=0&parentHeight=0`)
+        let data = await response.json() as any
+        let post: CreateOp<Record> = {
+          author: data.thread.post.author.did,
+          record: data.thread.post.record,
+          uri,
+          cid
+        }
+        let imgUrls = getPostImgurls(post)
+
+        if (imgUrls && !post.record?.labels?.length) {
+          let ret = await isNSFW(post.author, false)
+
+          if (ret === -1) {
+            let rows = [{
+              uri: post.uri,
+              cid: post.cid,
+              indexedAt: new Date().toISOString(),
+              author: post.author,
+              imgUrls
+            }]
+            await this.db
+            .insertInto('report_image_post')
+            .values(rows)
+            .onConflict((oc) => oc.doNothing())
+            .execute()
+            console.log(`save to report db`)
+          }
+        } else {
+          console.log(`no img found or record already labeled`)
+        }
+      }
     }
 
     const body = {
-      "id": 100,
+      "id": ret,
       "reasonType": reasonType,
       "subject": subject,
       "reportedBy": requester,

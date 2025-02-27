@@ -51,6 +51,10 @@ export async function isBot(did: string) {
     }
 
     // compute
+    return await computeBot(did, ret)
+}
+
+export async function computeBot(did: string, ret: any = undefined) {
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getAuthorFeed?actor=${did}&filter=posts_no_replies&includePins=false&limit=30`
     console.log(`check bot fetch url: ${url}`)
     let response = await fetch(url)
@@ -61,12 +65,15 @@ export async function isBot(did: string) {
     let a = new Date(data.feed[0].post.record.createdAt) as any
     let b = new Date(data.feed[data.feed.length - 1].post.record.createdAt) as any
     let t = (a - b)/data.feed.length/1000/60/60
+
+    if (ret === undefined) ret = await getBW(did)
     ret.bot = t < 1 ? 1 : 0
+
     await putBW([ret])
     return ret.bot
 }
 
-export async function isNSFW(did: string) {
+export async function isNSFW(did: string, useCache: boolean = true) {
     // try cache
     let ret = await getBW(did)
     let aturi = `at://${did}/app.bsky.feed.post/*`
@@ -76,8 +83,8 @@ export async function isNSFW(did: string) {
     let data = await response.json() as any
     let nsfw = 0
     if (data.labels.length) nsfw = 1
-    let cached_not_equal = ret.nsfw !== -1 && ret.nsfw != nsfw
-    let no_cache_is_black = ret.nsfw === -1 && nsfw === 1
+    let cached_not_equal = useCache && ret.nsfw !== -1 && ret.nsfw != nsfw
+    let no_cache_is_black = (!useCache || ret.nsfw === -1) && nsfw === 1
 
     if (cached_not_equal || no_cache_is_black) {
         ret.nsfw = nsfw
