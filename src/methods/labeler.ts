@@ -70,7 +70,8 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.moderation.createReport(async ({ req, input }) => {
-    const requester = await validateAuth(req, ctx.cfg.serviceDid, ctx.didResolver)
+    let labeler_did: any = process.env.LABELER_DID
+    const requester = await validateAuth(req, labeler_did, ctx.didResolver)
     const { reasonType, reason } = input.body
     console.log(`${requester} report ${reasonType} with ${reason}`)
     const subject = input.body.subject as any
@@ -78,20 +79,23 @@ export default function (server: Server, ctx: AppContext) {
     let ret = 100
 
 
-    if (reasonType === 'reasonOther' && reason === 'bot') {
+    if (reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'bot') {
       // bot
       let target = getDid(did || uri)
-      let ret = await computeBot(target)
+      ret = await computeBot(target)
       console.log(`report bot did: ${target} ret: ${ret}`)
     }
 
-    else if (reasonType === 'reasonSexual' || (reasonType === 'reasonOther' && reason === 'nsfw')) {
+    else if (reasonType === 'com.atproto.moderation.defs#reasonSexual' || (reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'nsfw')) {
       // nsfw
       if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
         console.log(`report nsfw should from a app.bsky.feed.post record`)
       } else {
         console.log(`report nsfw uri: ${uri} cid: ${cid}`)
-        let response = await fetch(`${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getPostThread?uri=${encodeURIComponent(uri)}&depth=0&parentHeight=0`)
+        let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getPostThread?uri=${encodeURIComponent(uri)}&depth=0&parentHeight=0`
+        let response = await fetch(url)
+        console.log(`get post fetch url: ${url}`)
+
         let data = await response.json() as any
         let post: CreateOp<Record> = {
           author: data.thread.post.author.did,
@@ -102,7 +106,7 @@ export default function (server: Server, ctx: AppContext) {
         let imgUrls = getPostImgurls(post)
 
         if (imgUrls && !post.record?.labels?.length) {
-          let ret = await isNSFW(post.author, false)
+          ret = await isNSFW(post.author, false)
 
           if (ret === -1) {
             let rows = [{
@@ -112,7 +116,8 @@ export default function (server: Server, ctx: AppContext) {
               author: post.author,
               imgUrls
             }]
-            await this.db
+
+            await ctx.db
             .insertInto('report_image_post')
             .values(rows)
             .onConflict((oc) => oc.doNothing())
