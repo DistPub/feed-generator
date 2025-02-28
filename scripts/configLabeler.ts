@@ -100,12 +100,12 @@ const run = async () => {
                 {
                     "description": "The account is category not bot.",
                     "lang": "en",
-                    "name": "🤖not bot"
+                    "name": "🎉not bot"
                 },
                 {
                     "description": "账号被分类为非机器人",
                     "lang": "zh",
-                    "name": "🧠非机器人"
+                    "name": "🎉非机器人"
                 }
             ],
             "severity": "none"
@@ -138,12 +138,12 @@ const run = async () => {
                 {
                     "description": "The account is category not nsfw.",
                     "lang": "en",
-                    "name": "🤖not bot"
+                    "name": "🎉not nsfw"
                 },
                 {
                     "description": "账号被分类为非NSFW群体",
                     "lang": "zh",
-                    "name": "🧠非NSFW群体"
+                    "name": "🎉非NSFW群体"
                 }
             ],
             "severity": "none"
