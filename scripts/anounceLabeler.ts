@@ -4,6 +4,35 @@ import { AtpAgent, BlobRef, AppBskyFeedDefs } from '@atproto/api'
 import fs from 'fs/promises'
 import { ids } from '../src/lexicon/lexicons'
 import * as plc from '@did-plc/lib'
+import { secp256k1 as k256 } from "@noble/curves/secp256k1"
+import * as ui8 from "uint8arrays";
+
+const SECP256K1_DID_PREFIX = new Uint8Array([0xe7, 0x01]);
+const BASE58_MULTIBASE_PREFIX = "z";
+const formatMultikey = (
+	jwtAlg: any,
+	keyBytes: Uint8Array,
+): string => {
+	let prefixedBytes: Uint8Array;
+	prefixedBytes = ui8.concat([SECP256K1_DID_PREFIX, k256.ProjectivePoint.fromHex(keyBytes).toRawBytes(true)]);
+	return (BASE58_MULTIBASE_PREFIX + ui8.toString(prefixedBytes, "base58btc"));
+};
+export const parsePrivateKey = (privateKey: string): Uint8Array => {
+	let keyBytes: Uint8Array | undefined;
+	try {
+		keyBytes = ui8.fromString(privateKey, "hex");
+		if (keyBytes?.byteLength !== 32) throw 0;
+	} catch {
+		try {
+			keyBytes = ui8.fromString(privateKey, "base64url");
+		} catch {}
+	} finally {
+		if (!keyBytes) {
+			throw new Error("Invalid private key. Must be hex or base64url, and 32 bytes long.");
+		}
+		return keyBytes;
+	}
+};
 
 const run = async () => {
   dotenv.config()
@@ -40,13 +69,19 @@ const run = async () => {
         },
         {
             type: 'input',
+            name: 'privateKey',
+            message: 'private key:',
+            required: true,
+        },
+        {
+            type: 'input',
             name: 'token',
             message: 'if you already got a token:',
             required: false,
         }
     ])
 
-  let { handle, password, labelerService, service, token } = answers
+  let { handle, password, labelerService, service, token, privateKey } = answers
   handle = 'china-good-voice.bsky.social'
   labelerService = 'https://feedg.hukoubook.com'
 
@@ -80,14 +115,21 @@ const run = async () => {
     "type": "AtprotoLabeler",
     "endpoint": labelerService
   }
+  const thekey = parsePrivateKey(privateKey)
+  console.log(thekey)
+  const publicKey = k256.getPublicKey(thekey);
+	const keyDid = 'did:key:' + formatMultikey('ES256K', publicKey);
+  let verificationMethods = doc.verificationMethods
+  verificationMethods['atproto_label'] = keyDid
   console.log(services)
   let r2 = await agent.com.atproto.identity.signPlcOperation({
     token,
     services,
+    verificationMethods,
   })
   let operation: any = r2.data.operation
   console.log(operation)
-  await plcClient.sendOperation(did, operation)
+  await agent.com.atproto.identity.submitPlcOperation({operation})
   console.log('All done 🎉')
 }
 
