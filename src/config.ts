@@ -1,5 +1,8 @@
 import { Database } from './db'
 import { DidResolver } from '@atproto/identity'
+import { Sequencer } from './methods/outbox'
+
+export const seq = new Sequencer()
 
 export type AppContext = {
   db: Database

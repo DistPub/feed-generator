@@ -5,6 +5,7 @@ import {
 import { CreateOp, FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 import { isBot, isNSFW, isNotChineseWebsite } from './bw'
 import { Record } from './lexicon/types/app/bsky/feed/post';
+import { isNotGoodUser } from './bw';
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
@@ -54,30 +55,45 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
         // no langs set
         return regex.test(create.record.text)
-      }).filter(async (create) => {
-        let bot = await isBot(create.author)
-
-        if (bot !== 1) return true
-
-        // no external
-        if (!create.record?.embed?.external) {
-          return false
-        }
-
-        let external = create.record.embed.external as any
-        let content = external.title + external.description
-
-        if (!regex.test(content)) {
-          return false
-        }
-
-        let url = new URL(external.uri)
-        return !isNotChineseWebsite(url.hostname)
       })
+
+    let postsToCreates: any = []
+    for (let create of postsToCreate) {
+      let bot = await isBot(create.author)
+
+      if (bot !== 1) {
+        postsToCreates.push(create)
+        continue
+      }
+
+      // no external
+      if (!create.record?.embed?.external) {
+        continue
+      }
+
+      let external = create.record.embed.external as any
+      let content = external.title + external.description
+
+      if (!regex.test(content)) {
+        continue
+      }
+
+      let url = new URL(external.uri)
+      if (await isNotChineseWebsite(url.hostname)) {
+        continue
+      }
+
+      postsToCreates.push(create)
+    }
+
+    // check not good user
+    for (let post of postsToCreates) {
+      await isNotGoodUser(post.author, true)
+    }
 
     let modImagePosts: any[] = []
     let createPosts: any[] = []
-    for(let post of postsToCreate) {
+    for(let post of postsToCreates) {
       let imgUrls = getPostImgurls(post)
 
       if (imgUrls && !post.record?.labels?.length) {

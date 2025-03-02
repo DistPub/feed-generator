@@ -1,4 +1,5 @@
 import { formatDate, getDB, getOffsetDate } from './dbpool'
+import { seq } from './config'
 
 export async function getBW(did: string) {
     let today = new Date()
@@ -41,6 +42,39 @@ export async function putBW(values: any) {
         )
     )))
     .execute())
+
+    // emit event
+    let labels: any = []
+    for (let item of values) {
+      if (item.bot !== -1) {
+        labels.push({
+          uri: item.did,
+          val: item.bot === 1 ? 'not-bot' : 'bot',
+          neg: true,
+          cts: new Date().toISOString()
+        })
+        labels.push({
+          uri: item.did,
+          val: item.bot === 1 ? 'bot' : 'not-bot',
+          cts: new Date().toISOString()
+        })
+      }
+      if (item.nsfw !== -1) {
+        labels.push({
+          uri: item.did,
+          val: item.nsfw === 1 ? 'not-nsfw' : 'nsfw',
+          neg: true,
+          cts: new Date().toISOString()
+        })
+        labels.push({
+          uri: item.did,
+          val: item.bot === 1 ? 'nsfw' : 'not-nsfw',
+          cts: new Date().toISOString()
+        })
+      }
+    }
+    labels = labels.map(item => ({src: process.env.LABELER_DID, ...item}))
+    seq.emit('events',[{ seq: new Date().getTime(), labels}])
 }
 
 export async function isBot(did: string) {
@@ -95,7 +129,7 @@ export async function isNSFW(did: string, useCache: boolean = true) {
     if (useCache && ret.nsfw !== -1) {
         return ret.nsfw
     }
-    
+
     return -1
 }
 
@@ -114,11 +148,32 @@ export async function isNotChineseWebsite(hostname: string) {
     return rows.length
 }
 
-export async function isNotGoodUser(did: string) {
+export async function isNotGoodUser(did: string, emit: boolean = false) {
   let db = await getDB('not.db', false, false)
   let rows = await db.selectFrom('not_good_user')
   .selectAll()
   .where('not_good_user.did', '=', did)
   .execute()
-  return rows.length
+  let ret = rows.length
+
+  if (emit) {
+    let labels: any = []
+    if (ret) {
+      labels.push({
+        uri: did,
+        val: 'not-good',
+        cts: new Date().toISOString()
+      })
+    } else {
+      labels.push({
+        uri: did,
+        val: 'not-good',
+        neg: true,
+        cts: new Date().toISOString()
+      })
+    }
+    labels = labels.map(item => ({src: process.env.LABELER_DID, ...item}))
+    seq.emit('events',[{ seq: new Date().getTime(), labels}])
+  }
+  return ret
 }

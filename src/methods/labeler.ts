@@ -5,6 +5,8 @@ import { validateAuth } from '../auth'
 import { CreateOp } from '../util/subscription'
 import { Record } from '../lexicon/types/app/bsky/feed/post'
 import { getPostImgurls } from '../subscription'
+import { Outbox } from './outbox'
+import { seq } from '../config'
 
 function getDid(uri: string) {
   if (uri.startsWith('at://')){
@@ -61,12 +63,11 @@ export default function (server: Server, ctx: AppContext) {
     }
   })
 
-  server.com.atproto.label.subscribeLabels(async function* ({
-    params,
-    signal,
-  }) {
-    const { cursor } = params
-    yield await new Promise((resolve, reject) => {})
+  server.com.atproto.label.subscribeLabels(async function* ({ signal }) {
+    const outbox = new Outbox(seq)
+    for await (const evt of outbox.events(undefined, signal)) {
+      yield { $type: '#labels', ...evt }
+    }
   })
 
   server.com.atproto.moderation.createReport(async ({ req, input }) => {
