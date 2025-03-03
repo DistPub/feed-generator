@@ -1,8 +1,8 @@
 import dotenv from 'dotenv'
+dotenv.config()
 import FeedGenerator from './server'
 
 const run = async () => {
-  dotenv.config()
   const hostname = maybeStr(process.env.FEEDGEN_HOSTNAME) ?? 'example.com'
   const serviceDid =
     maybeStr(process.env.FEEDGEN_SERVICE_DID) ?? `did:web:${hostname}`

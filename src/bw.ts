@@ -73,7 +73,7 @@ export async function putBW(values: any) {
         })
       }
     }
-    labels = labels.map(item => ({src: process.env.LABELER_DID, ...item}))
+    labels = labels.map(item => (signLabel({src: process.env.LABELER_DID, ...item})))
     seq.emit('events',[{ seq: new Date().getTime(), labels}])
 }
 
@@ -172,8 +172,26 @@ export async function isNotGoodUser(did: string, emit: boolean = false) {
         cts: new Date().toISOString()
       })
     }
-    labels = labels.map(item => ({src: process.env.LABELER_DID, ...item}))
+    labels = labels.map(item => (signLabel({src: process.env.LABELER_DID, ...item})))
     seq.emit('events',[{ seq: new Date().getTime(), labels}])
   }
   return ret
+}
+
+import { sha256 } from "@noble/hashes/sha256";
+import { secp256k1 as k256 } from "@noble/curves/secp256k1"
+import { cborEncode } from '@atproto/common'
+import { signKey } from './config'
+
+export function k256Sign(privateKey: Uint8Array, msg: Uint8Array): Uint8Array {
+	const msgHash = sha256(msg);
+	const sig = k256.sign(msgHash, privateKey, { lowS: true });
+	return sig.toCompactRawBytes();
+}
+
+function signLabel(label) {
+  const toSign = {...label, ver: 1};
+	const bytes = cborEncode(toSign);
+	const sig = k256Sign(signKey, bytes);
+	return { ...toSign, sig };
 }
