@@ -69,7 +69,7 @@ export async function putBW(values: any) {
         })
         labels.push({
           uri: item.did,
-          val: item.bot === 1 ? 'nsfw' : 'not-nsfw',
+          val: item.nsfw === 1 ? 'nsfw' : 'not-nsfw',
           cts: new Date().toISOString()
         })
       }
