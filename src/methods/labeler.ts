@@ -75,7 +75,12 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport(async ({ req, input }) => {
     console.log(`[createReport]${JSON.stringify(req.headers)}`)
     let labeler_did: any = process.env.LABELER_DID
-    const requester = await validateAuth(req, labeler_did, ctx.didResolver)
+    let requester = 'unkown'
+    try {
+      requester = await validateAuth(req, labeler_did, ctx.didResolver)
+    } catch(error) {
+      console.error(`validate auth error: ${error}`)
+    }
     const { reasonType, reason } = input.body
     console.log(`${requester} report ${reasonType} with ${reason}`)
     const subject = input.body.subject as any

@@ -94,7 +94,7 @@ export async function computeBot(did: string, ret: any = undefined) {
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getAuthorFeed?actor=${did}&filter=posts_no_replies&includePins=false&limit=30`
     let response = await fetch(url)
     let data = await response.json() as any
-    if (data.error || data.feed.length < 2) {
+    if (data.error || data.feed.length < 30) {
         return -1
     }
     let a = new Date(data.feed[0].post.record.createdAt) as any
