@@ -75,7 +75,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport(async ({ req, input }) => {
     console.log(`[createReport]${JSON.stringify(req.headers)}`)
     let labeler_did: any = process.env.LABELER_DID
-    let requester = 'unkown'
+    let requester: any = undefined
     try {
       requester = await validateAuth(req, labeler_did, ctx.didResolver)
     } catch(error) {
@@ -143,7 +143,7 @@ export default function (server: Server, ctx: AppContext) {
       "id": ret,
       "reasonType": reasonType,
       "subject": subject,
-      "reportedBy": requester,
+      "reportedBy": requester || 'did:web:undefined.com',
       "createdAt": new Date().toISOString()
     }
     return {

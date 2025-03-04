@@ -39,6 +39,7 @@ export class FeedGenerator {
 
     const didCache = new MemoryCache()
     const didResolver = new DidResolver({
+      timeout: 3*60000,
       plcUrl: process.env.PLC_URL,
       didCache,
     })
