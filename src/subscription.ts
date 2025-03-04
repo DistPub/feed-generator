@@ -41,6 +41,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     const ops = await getOpsByType(evt)
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
+    if (postsToDelete.length > 0) {
+      await this.db
+        .deleteFrom('post')
+        .where('uri', 'in', postsToDelete)
+        .execute()
+    }
+
     let postsToCreate = ops.posts.creates
       .filter((create) => {
         // no reply
@@ -56,6 +63,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         // no langs set
         return regex.test(create.record.text)
       })
+
+    if (!postsToCreate.length) return
 
     let postsToCreates: any = []
     for (let create of postsToCreate) {
@@ -86,6 +95,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       postsToCreates.push(create)
     }
 
+    if (!postsToCreates.length) return
+
     // check not good user
     for (let post of postsToCreates) {
       await isNotGoodUser(post.author, true)
@@ -106,26 +117,20 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
             author: post.author,
             imgUrls
           })
+          continue
         }
-      } else {
-        createPosts.push({
-          uri: post.uri,
-          cid: post.cid,
-          indexedAt: new Date().toISOString()
-        })
       }
+      
+      createPosts.push({
+        uri: post.uri,
+        cid: post.cid,
+        indexedAt: new Date().toISOString()
+      })
     }
 
     // log info
-    createPosts.forEach(item => console.log(`create post: ${ JSON.stringify(item) }`))
-    modImagePosts.forEach(item => console.log(`mod post: ${ JSON.stringify(item) }`))
+    console.log(`[FirehoseSubscription]create ${createPosts.length} posts, mod ${modImagePosts.length} posts`)
 
-    if (postsToDelete.length > 0) {
-      await this.db
-        .deleteFrom('post')
-        .where('uri', 'in', postsToDelete)
-        .execute()
-    }
     if (modImagePosts.length > 0) {
       await this.db
         .insertInto('mod_image_post')

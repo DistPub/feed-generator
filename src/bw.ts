@@ -1,5 +1,6 @@
 import { formatDate, getDB, getOffsetDate } from './dbpool'
 import { seq } from './config'
+import { lexToJson } from '@atproto/lexicon'
 
 export async function getBW(did: string) {
     let today = new Date()
@@ -74,7 +75,8 @@ export async function putBW(values: any) {
       }
     }
     labels = labels.map(item => (signLabel({src: process.env.LABELER_DID, ...item})))
-    seq.emit('events',[{ seq: new Date().getTime(), labels}])
+    let events = [{ seq: new Date().getTime(), labels}]
+    seq.emit('events', events)
 }
 
 export async function isBot(did: string) {
@@ -90,7 +92,6 @@ export async function isBot(did: string) {
 
 export async function computeBot(did: string, ret: any = undefined) {
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getAuthorFeed?actor=${did}&filter=posts_no_replies&includePins=false&limit=30`
-    console.log(`check bot fetch url: ${url}`)
     let response = await fetch(url)
     let data = await response.json() as any
     if (data.error || data.feed.length < 2) {
@@ -112,7 +113,6 @@ export async function isNSFW(did: string, useCache: boolean = true) {
     let ret = await getBW(did)
     let aturi = `at://${did}/app.bsky.feed.post/*`
     let url = `${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${encodeURIComponent(aturi)}&limit=1`
-    console.log(`check nsfw fetch url: ${url}`)
     let response = await fetch(url)
     let data = await response.json() as any
     let nsfw = 0
@@ -173,7 +173,8 @@ export async function isNotGoodUser(did: string, emit: boolean = false) {
       })
     }
     labels = labels.map(item => (signLabel({src: process.env.LABELER_DID, ...item})))
-    seq.emit('events',[{ seq: new Date().getTime(), labels}])
+    let events = [{ seq: new Date().getTime(), labels}]
+    seq.emit('events', events)
   }
   return ret
 }
@@ -189,7 +190,7 @@ export function k256Sign(privateKey: Uint8Array, msg: Uint8Array): Uint8Array {
 	return sig.toCompactRawBytes();
 }
 
-function signLabel(label) {
+export function signLabel(label) {
   const toSign = {...label, ver: 1};
 	const bytes = cborEncode(toSign);
 	const sig = k256Sign(signKey, bytes);

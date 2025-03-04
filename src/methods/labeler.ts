@@ -1,6 +1,6 @@
 import { Server } from '../lexicon'
 import { AppContext } from '../config'
-import { getBW, isNotGoodUser, computeBot, isNSFW } from '../bw'
+import { getBW, isNotGoodUser, computeBot, isNSFW, signLabel } from '../bw'
 import { validateAuth } from '../auth'
 import { CreateOp } from '../util/subscription'
 import { Record } from '../lexicon/types/app/bsky/feed/post'
@@ -22,7 +22,8 @@ function getDid(uri: string) {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.label.queryLabels(async ({ params }) => {
+  server.com.atproto.label.queryLabels(async ({ req, params }) => {
+    console.log(`[queryLabels]${JSON.stringify(req.headers)}`)
     const { uriPatterns, sources, limit, cursor } = params
     let labels: any = []
     for (let uri of uriPatterns) {
@@ -58,12 +59,13 @@ export default function (server: Server, ctx: AppContext) {
     return {
       encoding: 'application/json',
       body: {
-        labels,
+        labels: labels.map(item => signLabel(item)),
       },
     }
   })
 
-  server.com.atproto.label.subscribeLabels(async function* ({ signal }) {
+  server.com.atproto.label.subscribeLabels(async function* ({ req, signal }) {
+    console.log(`[subscribeLabels]${JSON.stringify(req.headers)}`)
     const outbox = new Outbox(seq)
     for await (const evt of outbox.events(undefined, signal)) {
       yield { $type: '#labels', ...evt }
@@ -71,6 +73,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 
   server.com.atproto.moderation.createReport(async ({ req, input }) => {
+    console.log(`[createReport]${JSON.stringify(req.headers)}`)
     let labeler_did: any = process.env.LABELER_DID
     const requester = await validateAuth(req, labeler_did, ctx.didResolver)
     const { reasonType, reason } = input.body
