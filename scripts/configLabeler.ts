@@ -44,7 +44,8 @@ const run = async () => {
   })
   console.log(`resolved did: ${response.data.did}`)
   let did = response.data.did
-  await agent.com.atproto.repo.putRecord({
+  await agent.com.atproto.repo.deleteRecord({repo: did, collection: "app.bsky.labeler.service", rkey: 'self'})
+  await agent.com.atproto.repo.createRecord({
     repo: did,
     collection: 'app.bsky.labeler.service',
     rkey: 'self',
@@ -108,7 +109,7 @@ const run = async () => {
                     "name": "🎉非机器人"
                 }
             ],
-            "severity": "none"
+            "severity": "inform"
             },
             {
             "adultOnly": false,
@@ -146,12 +147,13 @@ const run = async () => {
                     "name": "🎉非NSFW群体"
                 }
             ],
-            "severity": "none"
+            "severity": "inform"
             }
         ]
     },
     "createdAt": new Date().toISOString()
-    }
+    },
+    validate: true
   })
   console.log('All done 🎉')
 }
