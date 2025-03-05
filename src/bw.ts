@@ -108,15 +108,26 @@ export async function computeBot(did: string, ret: any = undefined) {
     return ret.bot
 }
 
+const nsfw_labels: string[] = [
+  "porn",
+  "sexual",
+  "nudity",
+  "sexual-figurative",
+  "graphic-media",
+]
+
 export async function isNSFW(did: string, useCache: boolean = true) {
     // try cache
     let ret = await getBW(did)
     let aturi = `at://${did}/app.bsky.feed.post/*`
-    let url = `${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${encodeURIComponent(aturi)}&limit=1`
+    let url = `${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${encodeURIComponent(aturi)}&limit=50`
     let response = await fetch(url)
     let data = await response.json() as any
+    let labels = data.labels.filter(item => {
+      return nsfw_labels.includes(item.val)
+    })
     let nsfw = 0
-    if (data.labels.length) nsfw = 1
+    if (labels.length) nsfw = 1
     let cached_not_equal = useCache && ret.nsfw !== -1 && ret.nsfw != nsfw
     let no_cache_is_black = (!useCache || ret.nsfw === -1) && nsfw === 1
 
