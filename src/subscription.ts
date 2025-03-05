@@ -42,7 +42,7 @@ export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolea
 
     if (isTop) {
       let record: any = post.record.embed.record
-      let uri = record.record.uri
+      let uri = record.uri || record.record.uri
       let subPost = await getPostByUri(uri)
       let subImgUrls = await getPostImgurls(subPost, false, false)
 
@@ -147,7 +147,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           continue
         }
       }
-      
+
       createPosts.push({
         uri: post.uri,
         cid: post.cid,
