@@ -6,7 +6,7 @@ import { CreateOp } from '../util/subscription'
 import { Record } from '../lexicon/types/app/bsky/feed/post'
 import { getPostImgurls } from '../subscription'
 import { Outbox } from './outbox'
-import { seq } from '../config'
+import { seq, getPostByUri } from '../config'
 
 function getDid(uri: string) {
   if (uri.startsWith('at://')){
@@ -101,18 +101,8 @@ export default function (server: Server, ctx: AppContext) {
         console.log(`report nsfw should from a app.bsky.feed.post record`)
       } else {
         console.log(`report nsfw uri: ${uri} cid: ${cid}`)
-        let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getPostThread?uri=${encodeURIComponent(uri)}&depth=0&parentHeight=0`
-        let response = await fetch(url)
-        console.log(`get post fetch url: ${url}`)
-
-        let data = await response.json() as any
-        let post: CreateOp<Record> = {
-          author: data.thread.post.author.did,
-          record: data.thread.post.record,
-          uri,
-          cid
-        }
-        let imgUrls = getPostImgurls(post, false)
+        let post = await getPostByUri(uri)
+        let imgUrls = await getPostImgurls(post, false)
 
         if (imgUrls && !post.record?.labels?.length) {
           ret = await isNSFW(post.author, false)

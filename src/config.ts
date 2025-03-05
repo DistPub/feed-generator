@@ -22,6 +22,23 @@ export const parsePrivateKey = (privateKey: string): Uint8Array => {
 export const signKey = parsePrivateKey(process.env.SIGN_KEY as string)
 export const seq = new Sequencer()
 
+import { CreateOp } from './util/subscription'
+import { Record } from './lexicon/types/app/bsky/feed/post'
+export async function getPostByUri(uri: string) {
+	let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getPostThread?uri=${encodeURIComponent(uri)}&depth=0&parentHeight=0`
+	let response = await fetch(url)
+	console.log(`get post fetch url: ${url}`)
+
+	let data = await response.json() as any
+	let post: CreateOp<Record> = {
+		author: data.thread.post.author.did,
+		record: data.thread.post.record,
+		uri,
+		cid: data.thread.post.cid
+	}
+	return post
+}
+
 
 export type AppContext = {
   db: Database

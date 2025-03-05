@@ -3,32 +3,59 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { CreateOp, FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
-import { isBot, isNSFW, isNotChineseWebsite } from './bw'
+import { isBot, isNSFW, isNotChineseWebsite, isNotGoodUser } from './bw'
 import { Record } from './lexicon/types/app/bsky/feed/post';
-import { isNotGoodUser } from './bw';
+import { getPostByUri } from './config';
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
-export function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolean = true) {
+function getEmbedImgurls(author: string, embed: any, comeFromSub: boolean) {
   let imgUrls: any = null
-  if (post.record?.embed?.images) {
-    const images = post.record.embed.images as Array<any>
+  if (embed?.images) {
+    const images = embed.images as Array<any>
     const imgLinks = images.map(item => {
-      return `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${comeFromSub ? item.image.ref : item.image.ref.$link}`
+      return `https://cdn.bsky.app/img/feed_thumbnail/plain/${author}/${comeFromSub ? item.image.ref : item.image.ref.$link}`
     })
     imgUrls = imgLinks.join()
   }
 
-  else if (post.record?.embed?.video) {
-    const video = post.record.embed.video as any
-    imgUrls = `https://video.bsky.app/watch/${post.author}/${comeFromSub ? video.ref : video.ref.$link }/thumbnail.jpg`
+  else if (embed?.video) {
+    const video = embed.video as any
+    imgUrls = `https://video.bsky.app/watch/${author}/${comeFromSub ? video.ref : video.ref.$link }/thumbnail.jpg`
   }
 
-  else if (post.record?.embed?.external) {
-    const external = post.record.embed.external as any
+  else if (embed?.external) {
+    const external = embed.external as any
     if (external?.thumb) {
-      imgUrls = `https://cdn.bsky.app/img/feed_thumbnail/plain/${post.author}/${comeFromSub ? external.thumb.ref : external.thumb.ref.$link}`
+      imgUrls = `https://cdn.bsky.app/img/feed_thumbnail/plain/${author}/${comeFromSub ? external.thumb.ref : external.thumb.ref.$link}`
     }
+  }
+
+  return imgUrls
+}
+
+export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolean = true, isTop: boolean = true) {
+  let imgUrls: any = null
+
+  if (post.record?.embed?.record) {
+    imgUrls = getEmbedImgurls(post.author, post.record.embed?.media, comeFromSub)
+
+    if (isTop) {
+      let record: any = post.record.embed.record
+      let uri = record.record.uri
+      let subPost = await getPostByUri(uri)
+      let subImgUrls = await getPostImgurls(subPost, false, false)
+
+      if (subImgUrls) {
+        if (imgUrls) {
+          imgUrls += `,${subImgUrls}`
+        } else {
+          imgUrls = subImgUrls
+        }
+      }
+    }
+  } else {
+    imgUrls = getEmbedImgurls(post.author, post.record?.embed, comeFromSub)
   }
 
   return imgUrls
@@ -105,7 +132,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     let modImagePosts: any[] = []
     let createPosts: any[] = []
     for(let post of postsToCreates) {
-      let imgUrls = getPostImgurls(post)
+      let imgUrls = await getPostImgurls(post)
 
       if (imgUrls && !post.record?.labels?.length) {
         let nsfw = await isNSFW(post.author)
