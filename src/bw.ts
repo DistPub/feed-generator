@@ -148,7 +148,7 @@ import { cntld, cctld } from './country'
 
 export async function isNotChineseWebsite(hostname: string) {
     const parts = hostname.split('.');
-    const tld = parts.pop() as string
+    const tld = `.${parts.pop()}`
     if (!cntld.includes(tld) && cctld.includes(tld)) return true
 
     let db = await getDB('not.db', false, false)
