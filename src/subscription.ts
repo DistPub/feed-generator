@@ -5,7 +5,7 @@ import {
 import { CreateOp, FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 import { isBot, isNSFW, isNotChineseWebsite, isNotGoodUser } from './bw'
 import { Record } from './lexicon/types/app/bsky/feed/post';
-import { getPostByUri } from './config';
+import { getDid, getPostByUri } from './config';
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
@@ -48,7 +48,7 @@ export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolea
 
       if (subImgUrls) {
         if (imgUrls) {
-          imgUrls += `,${subImgUrls}`
+          imgUrls += `;${subImgUrls}`
         } else {
           imgUrls = subImgUrls
         }
@@ -135,13 +135,27 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       let imgUrls = await getPostImgurls(post)
 
       if (imgUrls && !post.record?.labels?.length) {
-        let nsfw = await isNSFW(post.author)
-        if (nsfw === -1) {
+        let a_nsfw = null
+        let b_nsfw = null
+        let refAuthor = ''
+        let [a, b] = imgUrls.split(';')
+
+        if (a) a_nsfw = await isNSFW(post.author)
+
+          // ref a record
+        if (b) {
+          let uri = post.record.embed.record.uri || post.record.embed.record.record.uri
+          refAuthor = getDid(uri)
+          b_nsfw = await isNSFW(refAuthor)
+        }
+
+        if (a_nsfw === -1 || b_nsfw === -1) {
           modImagePosts.push({
             uri: post.uri,
             cid: post.cid,
             indexedAt: new Date().toISOString(),
             author: post.author,
+            refAuthor,
             imgUrls
           })
           continue

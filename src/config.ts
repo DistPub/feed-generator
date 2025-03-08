@@ -39,6 +39,18 @@ export async function getPostByUri(uri: string) {
 	return post
 }
 
+export function getDid(uri: string) {
+  if (uri.startsWith('at://')){
+	let idx = uri.indexOf('/', 5)
+	return uri.slice(5, idx)
+  }
+
+  if (uri.startsWith('did:')) {
+	return uri
+  }
+
+  throw Error(`not support uri ${uri}`)
+}
 
 export type AppContext = {
   db: Database

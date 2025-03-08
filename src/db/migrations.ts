@@ -51,3 +51,14 @@ migrations['002'] = {
     await db.schema.dropTable('report_image_post').execute()
   },
 }
+migrations['003'] = {
+  async up(db: Kysely<unknown>) {
+    await db.schema
+      .alterTable('mod_image_post')
+      .addColumn('refAuthor', 'varchar', (col) => col.notNull())
+      .execute()
+  },
+  async down(db: Kysely<unknown>) {
+    await db.schema.alterTable('mod_image_post').dropColumn('refAuthor').execute()
+  },
+}

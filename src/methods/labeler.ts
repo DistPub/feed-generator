@@ -6,20 +6,7 @@ import { CreateOp } from '../util/subscription'
 import { Record } from '../lexicon/types/app/bsky/feed/post'
 import { getPostImgurls } from '../subscription'
 import { Outbox } from './outbox'
-import { seq, getPostByUri } from '../config'
-
-function getDid(uri: string) {
-  if (uri.startsWith('at://')){
-    let idx = uri.indexOf('/', 5)
-    return uri.slice(5, idx)
-  }
-
-  if (uri.startsWith('did:')) {
-    return uri
-  }
-
-  throw Error(`not support uri ${uri}`)
-}
+import { seq, getPostByUri, getDid } from '../config'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ req, params }) => {
@@ -102,7 +89,7 @@ export default function (server: Server, ctx: AppContext) {
       } else {
         console.log(`report nsfw uri: ${uri} cid: ${cid}`)
         let post = await getPostByUri(uri)
-        let imgUrls = await getPostImgurls(post, false)
+        let imgUrls = await getPostImgurls(post, false, false)
 
         if (imgUrls && !post.record?.labels?.length) {
           ret = await isNSFW(post.author, false)
