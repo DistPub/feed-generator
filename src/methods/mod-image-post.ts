@@ -4,10 +4,17 @@ import { getBW, putBW } from '../bw'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.hukoubook.fg.getModImagePosts(async (_) => {
-    let mod = await ctx.db
+    let modqs = await ctx.db
     .selectFrom('mod_image_post')
     .selectAll()
     .execute()
+    let mod: any = []
+    for (let item of modqs) {
+      if (!item.refAuthor) {
+        delete item.refAuthor
+      }
+      mod.push(item)
+    }
 
     let report = await ctx.db
     .selectFrom('report_image_post')

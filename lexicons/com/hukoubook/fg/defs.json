@@ -17,6 +17,7 @@
         "cid": { "type": "string", "format": "cid" },
         "indexedAt": { "type": "string" },
         "author": { "type": "string", "format": "did" },
+        "refAuthor": { "type": "string", "format": "did" },
         "imgUrls": { "type": "string" }
       },
       "required": ["uri", "cid", "indexedAt", "author", "imgUrls"]

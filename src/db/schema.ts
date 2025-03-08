@@ -21,7 +21,7 @@ export type ModImagePost = {
   cid: string
   indexedAt: string
   author: string
-  refAuthor: string
+  refAuthor?: string
   imgUrls: string
 }
 
