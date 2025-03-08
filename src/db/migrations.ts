@@ -55,7 +55,7 @@ migrations['003'] = {
   async up(db: Kysely<unknown>) {
     await db.schema
       .alterTable('mod_image_post')
-      .addColumn('refAuthor', 'varchar', (col) => col.notNull())
+      .addColumn('refAuthor', 'varchar', (col) => col.notNull().defaultTo(''))
       .execute()
   },
   async down(db: Kysely<unknown>) {
