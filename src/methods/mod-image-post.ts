@@ -31,12 +31,15 @@ export default function (server: Server, ctx: AppContext) {
     let rets: any = []
     for (let item of categories) {
       let record = await getBW(item.did)
-      record.nsfw = item.category
-      rets.push(record)
+      if (record.bot !== -1 || item.category === 1) {
+        record.nsfw = item.category
+        rets.push(record)
+      }
     }
     await putBW(rets)
 
     let authors = rets.map((item: any) => item.did)
+    authors.push('')
 
     // feed mod callback
     if (move) {
@@ -50,11 +53,13 @@ export default function (server: Server, ctx: AppContext) {
           eb.val(new Date().toISOString()).as('indexedAt')
         ])
         .where('mod_image_post.author', 'in', authors)
+        .where('mod_image_post.refAuthor', 'in', authors)
       )
       .execute();
 
       await ctx.db.deleteFrom('mod_image_post')
       .where('mod_image_post.author', 'in', authors)
+      .where('mod_image_post.refAuthor', 'in', authors)
       .execute()
     } else {
       // user report callback
