@@ -81,6 +81,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         return create.record.reply === undefined
       })
       .filter((create) => {
+        // no ref with nothing
+        if (create.record?.embed?.record)
+          if (!create.record.embed?.media && create.record.text === '')
+            return false
+        return true
+      })
+      .filter((create) => {
         // langs exists
         if (create.record?.langs) {
           let langs = create.record.langs as Array<string>

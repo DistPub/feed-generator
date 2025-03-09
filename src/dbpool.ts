@@ -144,14 +144,20 @@ function downloadFile(url, savePath) {
   });
 }
 
+import { seq } from './config'
+import { signLabel } from './bw'
 export async function syncDBFile() {
   let synckey = 'sync.db'
   await downloadFile(process.env.NOT_DB_URL, absKey(synckey));
 
   // close old, active new
   let key = 'not.db'
+  let old_not: any = []
   if (dbpool.hasOwnProperty(key)) {
       let db = dbpool[key]
+      old_not = await db.selectFrom('not_good_user')
+      .selectAll()
+      .execute()
       await db.destroy()
   }
 
@@ -161,7 +167,30 @@ export async function syncDBFile() {
   } catch(error) {
     console.log(error)
   }
-  await getDB(key, false, false, false)
+  let db = await getDB(key, false, false, false)
+  let new_not = await db.selectFrom('not_good_user')
+  .selectAll()
+  .execute()
+  let added = new_not.filter(item => !old_not.includes(item))
+  let removed = old_not.filter(item => !new_not.includes(item))
+  let labels = added.map(item => {
+    return {
+      uri: item.did,
+      val: 'not-good',
+      cts: new Date().toISOString()
+    }
+  })
+  labels.push(...removed.map((item: any) => {
+    return {
+      uri: item.did,
+      val: 'not-good',
+      neg: true,
+      cts: new Date().toISOString()
+    }
+  }))
+  labels = labels.map(item => (signLabel({src: process.env.LABELER_DID, ...item})))
+  let events = [{ seq: new Date().getTime(), labels}]
+  seq.emit('events', events)
 }
 
 function absKey(key: string) {

@@ -115,32 +115,42 @@ const nsfw_labels: string[] = [
   "sexual-figurative",
   "graphic-media",
 ]
+async function fetchModRs(did: string) {
+  let aturi = `at://${did}/app.bsky.feed.post/*`
+  let url = `${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${encodeURIComponent(aturi)}&limit=50`
+  let response = await fetch(url)
+  let data = await response.json() as any
+  let labels = data.labels.filter(item => {
+    return nsfw_labels.includes(item.val)
+  })
+  let nsfw = 0
+  if (labels.length) nsfw = 1
+  return nsfw
+}
 
 export async function isNSFW(did: string, useCache: boolean = true) {
     // try cache
     let ret = await getBW(did)
-    let aturi = `at://${did}/app.bsky.feed.post/*`
-    let url = `${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${encodeURIComponent(aturi)}&limit=50`
-    let response = await fetch(url)
-    let data = await response.json() as any
-    let labels = data.labels.filter(item => {
-      return nsfw_labels.includes(item.val)
-    })
-    let nsfw = 0
-    if (labels.length) nsfw = 1
-    let cached_not_equal = useCache && ret.nsfw !== -1 && ret.nsfw != nsfw
-    let no_cache_is_black = (!useCache || ret.nsfw === -1) && nsfw === 1
 
-    if (cached_not_equal || no_cache_is_black) {
-        ret.nsfw = nsfw
+    if (useCache && ret.nsfw === 1) {
+      return 1
+    }
+
+    if (useCache && ret.nsfw === 0) {
+      if (await fetchModRs(did) === 1) {
+        ret.nsfw = 1
         await putBW([ret])
-        return nsfw
+      }
+      return ret.nsfw
     }
 
-    if (useCache && ret.nsfw !== -1) {
-        return ret.nsfw
-    }
+    let nsfw = await fetchModRs(did)
 
+    if (nsfw === 1) {
+      ret.nsfw = 1
+      await putBW([ret])
+      return nsfw
+    }
     return -1
 }
 
