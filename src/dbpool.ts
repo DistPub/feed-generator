@@ -158,6 +158,7 @@ export async function syncDBFile() {
       old_not = await db.selectFrom('not_good_user')
       .selectAll()
       .execute()
+      old_not = old_not.map(item => item.did)
       await db.destroy()
   }
 
@@ -171,18 +172,19 @@ export async function syncDBFile() {
   let new_not = await db.selectFrom('not_good_user')
   .selectAll()
   .execute()
+  new_not = new_not.map(item => item.did)
   let added = new_not.filter(item => !old_not.includes(item))
   let removed = old_not.filter(item => !new_not.includes(item))
   let labels = added.map(item => {
     return {
-      uri: item.did,
+      uri: item,
       val: 'not-good',
       cts: new Date().toISOString()
     }
   })
   labels.push(...removed.map((item: any) => {
     return {
-      uri: item.did,
+      uri: item,
       val: 'not-good',
       neg: true,
       cts: new Date().toISOString()
