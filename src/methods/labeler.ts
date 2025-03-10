@@ -85,7 +85,8 @@ export default function (server: Server, ctx: AppContext) {
 
     else if (reasonType === 'com.atproto.moderation.defs#reasonSpam') {
       // not good
-      await syncDBFile()
+      if (reason === 'sync')
+        await syncDBFile()
       let target = getDid(did || uri)
       ret = await isNotGoodUser(target, true)
       console.log(`report not good did: ${target} ret: ${ret}`)
