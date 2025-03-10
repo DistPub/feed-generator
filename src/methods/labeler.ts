@@ -87,7 +87,7 @@ export default function (server: Server, ctx: AppContext) {
       // not good
       await syncDBFile()
       let target = getDid(did || uri)
-      ret = await isNotGoodUser(target)
+      ret = await isNotGoodUser(target, true)
       console.log(`report not good did: ${target} ret: ${ret}`)
     }
 
