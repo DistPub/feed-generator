@@ -190,9 +190,12 @@ export async function syncDBFile() {
       cts: new Date().toISOString()
     }
   }))
-  labels = labels.map(item => (signLabel({src: process.env.LABELER_DID, ...item})))
-  let events = [{ seq: new Date().getTime(), labels}]
-  seq.emit('events', events)
+
+  if (labels.length) {
+    labels = labels.map(item => (signLabel({src: process.env.LABELER_DID, ...item})))
+    let events = [{ seq: new Date().getTime(), labels}]
+    seq.emit('events', events)
+  }
 }
 
 function absKey(key: string) {
