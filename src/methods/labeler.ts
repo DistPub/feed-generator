@@ -7,6 +7,7 @@ import { Record } from '../lexicon/types/app/bsky/feed/post'
 import { getPostImgurls } from '../subscription'
 import { Outbox } from './outbox'
 import { seq, getPostByUri, getDid } from '../config'
+import { syncDBFile } from '../dbpool'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ req, params }) => {
@@ -80,6 +81,14 @@ export default function (server: Server, ctx: AppContext) {
       let target = getDid(did || uri)
       ret = await computeBot(target)
       console.log(`report bot did: ${target} ret: ${ret}`)
+    }
+
+    else if (reasonType === 'com.atproto.moderation.defs#reasonSpam') {
+      // not good
+      await syncDBFile()
+      let target = getDid(did || uri)
+      ret = await isNotGoodUser(target)
+      console.log(`report not good did: ${target} ret: ${ret}`)
     }
 
     else if (reasonType === 'com.atproto.moderation.defs#reasonSexual' || (reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'nsfw')) {
