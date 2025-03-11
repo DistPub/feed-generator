@@ -123,8 +123,18 @@ async function fetchModRs(did: string) {
   let labels = data.labels.filter(item => {
     return nsfw_labels.includes(item.val)
   })
+
+  // check labeled uri if exists or not
+  let uris = labels.map(item => `uris=${encodeURIComponent(item.uri)}`)
+  let posts = []
+  for (let i = 0; i < uris.length; i += 25) {
+    let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getPosts?${uris.slice(i, i + 25).join('&')}`
+    let response = await fetch(url)
+    let data = await response.json() as any
+    posts = posts.concat(data.posts)
+  }
   let nsfw = 0
-  if (labels.length) nsfw = 1
+  if (posts.length) nsfw = 1
   return nsfw
 }
 
