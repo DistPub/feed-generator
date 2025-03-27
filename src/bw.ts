@@ -128,7 +128,6 @@ export async function computeBot(did: string, ret: any = undefined) {
     }
 
     if (counter === data.feed.length) {
-      console.log(`${did} is bot`)
       ret.bot = 1
     }
 
