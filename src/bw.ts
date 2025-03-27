@@ -104,6 +104,34 @@ export async function computeBot(did: string, ret: any = undefined) {
     if (ret === undefined) ret = await getBW(did)
     ret.bot = t < 1 ? 1 : 0
 
+    if (ret.bot) {
+      await putBW([ret])
+      return ret.bot
+    }
+
+    let counter = 0
+    for (let feed of data.feed) {
+      if (feed.post.record?.facets) {
+        const facets_types = feed.post.record.facets.map(item => item.features).reduce((s, t) => [...s, ...t], []).map(item => item.$type)
+        if (facets_types.includes('app.bsky.richtext.facet#link')) {
+          counter += 1
+          continue
+        }
+      }
+
+      if (feed.post.record?.embed) {
+        if (feed.post.record.embed.$type === 'app.bsky.embed.external') {
+          counter += 1
+          continue
+        }
+      }
+    }
+
+    if (counter === data.feed.length) {
+      console.log(`${did} is bot`)
+      ret.bot = 1
+    }
+
     await putBW([ret])
     return ret.bot
 }
