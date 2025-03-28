@@ -127,7 +127,7 @@ export async function computeBot(did: string, ret: any = undefined) {
       }
     }
 
-    if (counter === data.feed.length) {
+    if (counter >= (data.feed.length * 0.8)) {
       ret.bot = 1
     }
 
