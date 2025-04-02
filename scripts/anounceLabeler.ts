@@ -82,8 +82,9 @@ const run = async () => {
     ])
 
   let { handle, password, labelerService, service, token, privateKey } = answers
-  handle = 'china-good-voice.bsky.social'
-  labelerService = 'https://feedg.hukoubook.com'
+  handle = 'cgv.hukoubook.com'
+  labelerService = 'https://labeler.hukoubook.com'
+  service = 'https://network.hukoubook.com'
 
   const agent = new AtpAgent({ service: service ? service : 'https://bsky.social' })
   await agent.login({ identifier: handle, password})
@@ -93,7 +94,7 @@ const run = async () => {
   console.log(`resolved did: ${response.data.did}`)
   let did = response.data.did
 
-  if (!token) {
+  if (!token && did.startsWith('did:plc:')) {
     let r1 = await agent.com.atproto.identity.requestPlcOperationSignature()
     if (!r1.success) {
         console.log('send token to email failed')
@@ -108,28 +109,51 @@ const run = async () => {
         }])
     token = tokeninput.token
   }
-  const plcClient = new plc.Client(process.env.PLC_URL as string)
-  let doc = await plcClient.getDocumentData(did)
-  let services = doc.services
-  services["atproto_labeler"] = {
-    "type": "AtprotoLabeler",
-    "endpoint": labelerService
+
+  if (did.startsWith('did:plc:')) {
+    const plcClient = new plc.Client(process.env.PLC_URL as string)
+    let doc = await plcClient.getDocumentData(did)
+    let services = doc.services
+    services["atproto_labeler"] = {
+      "type": "AtprotoLabeler",
+      "endpoint": labelerService
+    }
+    const thekey = parsePrivateKey(privateKey)
+    console.log(thekey)
+    const publicKey = k256.getPublicKey(thekey);
+    const keyDid = 'did:key:' + formatMultikey('ES256K', publicKey);
+    let verificationMethods = doc.verificationMethods
+    verificationMethods['atproto_label'] = keyDid
+    console.log(services)
+    let r2 = await agent.com.atproto.identity.signPlcOperation({
+      token,
+      services,
+      verificationMethods,
+    })
+    let operation: any = r2.data.operation
+    console.log(operation)
+    await agent.com.atproto.identity.submitPlcOperation({operation})
+  } else {
+    console.log('modify your did.json like belows')
+    const add_service = {
+      "id": "#atproto_labeler",
+      "type": "AtprotoLabeler",
+      "serviceEndpoint": labelerService
+    }
+    console.log(JSON.stringify(add_service))
+
+    const thekey = parsePrivateKey(privateKey)
+    console.log(thekey)
+    const publicKey = k256.getPublicKey(thekey);
+    const keyDid = formatMultikey('ES256K', publicKey);
+    const add_method = {
+      "id": `${did}#atproto_label`,
+      "type": "Multikey",
+      "controller": did,
+      "publicKeyMultibase": keyDid
+    }
+    console.log(JSON.stringify(add_method))
   }
-  const thekey = parsePrivateKey(privateKey)
-  console.log(thekey)
-  const publicKey = k256.getPublicKey(thekey);
-	const keyDid = 'did:key:' + formatMultikey('ES256K', publicKey);
-  let verificationMethods = doc.verificationMethods
-  verificationMethods['atproto_label'] = keyDid
-  console.log(services)
-  let r2 = await agent.com.atproto.identity.signPlcOperation({
-    token,
-    services,
-    verificationMethods,
-  })
-  let operation: any = r2.data.operation
-  console.log(operation)
-  await agent.com.atproto.identity.submitPlcOperation({operation})
   console.log('All done 🎉')
 }
 

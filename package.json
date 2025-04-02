@@ -11,6 +11,7 @@
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
     "anounceLabeler": "ts-node scripts/anounceLabeler.ts",
     "configLabeler": "ts-node scripts/configLabeler.ts",
+    "unconfigLabeler": "ts-node scripts/unconfigLabeler.ts",
     "unpublishFeed": "ts-node scripts/unpublishFeedGen.ts",
     "start": "ts-node src/index.ts",
     "build": "tsc",

@@ -35,7 +35,8 @@ const run = async () => {
     ])
 
   let { handle, password, service } = answers
-  handle = 'china-good-voice.bsky.social'
+  handle = 'cgv.hukoubook.com'
+  service = 'https://network.hukoubook.com'
 
   const agent = new AtpAgent({ service: service ? service : 'https://bsky.social' })
   await agent.login({ identifier: handle, password})
