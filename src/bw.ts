@@ -139,8 +139,6 @@ const nsfw_labels: string[] = [
   "porn",
   "sexual",
   "nudity",
-  "sexual-figurative",
-  "graphic-media",
 ]
 async function fetchModRs(did: string) {
   let aturi = `at://${did}/app.bsky.feed.post/*`
