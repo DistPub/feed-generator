@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       !algo
     ) {
       throw new InvalidRequestError(
-        'Unsupported algorithm',
+        '请搜索关注:中国好声音',
         'UnsupportedAlgorithm',
       )
     }

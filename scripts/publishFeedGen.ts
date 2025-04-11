@@ -2,7 +2,6 @@ import dotenv from 'dotenv'
 import inquirer from 'inquirer'
 import { AtpAgent, BlobRef, AppBskyFeedDefs } from '@atproto/api'
 import fs from 'fs/promises'
-import { ids } from '../src/lexicon/lexicons'
 
 const run = async () => {
   dotenv.config()
@@ -93,9 +92,9 @@ const run = async () => {
     avatarRef = blobRes.data.blob
   }
 
-  await agent.api.com.atproto.repo.putRecord({
+  await agent.api.com.atproto.repo.createRecord({
     repo: agent.session?.did ?? '',
-    collection: ids.AppBskyFeedGenerator,
+    collection: 'app.bsky.feed.generator',
     rkey: recordName,
     record: {
       did: feedGenDid,
