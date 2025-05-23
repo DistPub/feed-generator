@@ -9,6 +9,8 @@ import { Outbox } from './outbox'
 import { seq, getPostByUri, getDid } from '../config'
 import { syncDBFile } from '../dbpool'
 
+export const http_server = {'express': <any>null}
+
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ req, params }) => {
     console.log(`[queryLabels]${JSON.stringify(req.headers)}`)
@@ -81,6 +83,17 @@ export default function (server: Server, ctx: AppContext) {
       let target = getDid(did || uri)
       ret = await computeBot(target)
       console.log(`report bot did: ${target} ret: ${ret}`)
+    }
+
+    else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:restart') {
+      http_server['express'].close((err) => {
+        if (err) {
+            console.error('Error closing server:', err);
+        } else {
+            console.log('Server successfully closed.');
+        }
+        process.exit(err ? 1 : 0)
+      })
     }
 
     else if (reasonType === 'com.atproto.moderation.defs#reasonSpam') {

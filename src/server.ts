@@ -6,7 +6,7 @@ import { createServer } from './lexicon'
 import feedGeneration from './methods/feed-generation'
 import describeGenerator from './methods/describe-generator'
 import modImagePost from './methods/mod-image-post'
-import labeler from './methods/labeler'
+import labeler, { http_server } from './methods/labeler'
 import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
@@ -90,6 +90,7 @@ export class FeedGenerator {
     await migrateToLatest(this.db)
     this.firehose.run(this.cfg.subscriptionReconnectDelay)
     this.server = this.app.listen(this.cfg.port, this.cfg.listenhost)
+    http_server['express'] = this.server
     await events.once(this.server, 'listening')
     this.setupDBMantainInterval()
     return this.server
