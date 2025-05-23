@@ -86,6 +86,10 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:restart') {
+      console.log('force close server after 60 seconds')
+      setTimeout(() => {process.exit(1)}, 60000)
+
+      // try graceful
       http_server['express'].close((err) => {
         if (err) {
             console.error('Error closing server:', err);
