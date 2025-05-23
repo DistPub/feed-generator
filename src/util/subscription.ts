@@ -14,6 +14,8 @@ import {
 import { Database } from '../db'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 
+export const event_status = {'update': 'unknown'}
+
 export abstract class FirehoseSubscriptionBase {
   public sub: Subscription<RepoEvent>
 
@@ -29,8 +31,16 @@ export abstract class FirehoseSubscriptionBase {
       agent: agent,
       service: service,
       method: ids.ComAtprotoSyncSubscribeRepos,
+      onReconnectError: (
+        error: unknown,
+        n: number,
+        initialSetup: boolean,
+      ) => {
+        console.error(`subscription reconnected at number: ${n} error: ${error}`)
+      },
       getParams: () => this.getCursor(),
       validate: (value: unknown) => {
+        event_status['update'] = new Date().toISOString()
         try {
           return lexicons.assertValidXrpcMessage<RepoEvent>(
             ids.ComAtprotoSyncSubscribeRepos,

@@ -4,6 +4,7 @@ import { AppContext } from '../config'
 import algos from '../algos'
 import { validateAuth } from '../auth'
 import { AtUri } from '@atproto/syntax'
+import { event_status } from '../util/subscription'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
@@ -15,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
       !algo
     ) {
       throw new InvalidRequestError(
-        '请搜索关注:中国好声音',
+        `请搜索关注:中国好声音 [update:${event_status['update']}]`,
         'UnsupportedAlgorithm',
       )
     }
