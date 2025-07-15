@@ -172,6 +172,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       createPosts.push({
         uri: post.uri,
         cid: post.cid,
+        author: post.author,
         indexedAt: new Date().toISOString()
       })
     }

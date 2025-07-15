@@ -145,7 +145,7 @@ function downloadFile(url, savePath) {
 }
 
 import { seq } from './config'
-import { signLabel } from './bw'
+import { computeBot, getBW, signLabel } from './bw'
 export async function syncDBFile() {
   let synckey = 'sync.db'
   await downloadFile(process.env.NOT_DB_URL, absKey(synckey));
@@ -200,4 +200,25 @@ export async function syncDBFile() {
 
 function absKey(key: string) {
   return process.env.DB_HOME + key
+}
+
+
+// analysis post
+import { Database as MainDB } from './db'
+export async function checkTalkTooMUchPeopleIsBot(db: MainDB, threshold: number = 8) {
+  console.log('check talk too much people')
+  const records = await db
+  .selectFrom('post')
+  .select('author')
+  .groupBy('author')
+  .having((eb) => eb.fn.count('author'), '>', threshold)
+  .execute();
+
+  for(let record of records) {
+    const ret = await getBW(record.author)
+    if (ret.bot === 0) {
+      const aret = await computeBot(record.author)
+      console.log(`auto check talk too much did: ${record.author} ret: ${aret}`)
+    }
+  }
 }

@@ -11,7 +11,7 @@ import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
 import wellKnown from './well-known'
-import { initDBPool, deleteDB, syncDBFile } from './dbpool'
+import { initDBPool, deleteDB, syncDBFile, checkTalkTooMUchPeopleIsBot } from './dbpool'
 
 export class FeedGenerator {
   public app: express.Application
@@ -81,6 +81,9 @@ export class FeedGenerator {
     setInterval(async () => {
       await deleteDB()
     }, 24*60*60000)
+    setInterval(async () => {
+      await checkTalkTooMUchPeopleIsBot(this.db)
+    }, 8*60*60000)
   }
 
   async start(): Promise<http.Server> {

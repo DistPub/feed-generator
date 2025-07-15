@@ -44,12 +44,13 @@ export default function (server: Server, ctx: AppContext) {
     // feed mod callback
     if (move) {
       await ctx.db.insertInto('post')
-      .columns(["uri", "cid", "indexedAt"])
+      .columns(["uri", "cid", "author", "indexedAt"])
       .expression((eb) => eb
         .selectFrom('mod_image_post')
         .select((eb) => [
           'mod_image_post.uri',
           'mod_image_post.cid',
+          'mod_image_post.author',
           eb.val(new Date().toISOString()).as('indexedAt')
         ])
         .where('mod_image_post.author', 'in', authors)
