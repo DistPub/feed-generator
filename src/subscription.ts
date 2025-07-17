@@ -64,6 +64,17 @@ export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolea
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
+    if (this.queue.size >= this.maxSize) {
+      console.log(`queue is full, skip event: ${evt.seq}`)
+      return
+    }
+
+    /////////////////////////////////////////////////////////////////
+    console.log(`add task to queue ${evt.seq}`)
+
+    return this.queue.add(async () => {
+      console.log(`current queue size: ${this.queue.size}`)
+
     if (!isCommit(evt)) return
     const ops = await getOpsByType(evt)
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
@@ -99,16 +110,6 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     if (!postsToCreate.length) return
 
-    if (this.queue.size >= this.maxSize) {
-      console.log(`queue is full, skip event: ${evt.seq}`)
-      return
-    }
-
-    /////////////////////////////////////////////////////////////////
-    console.log(`add task to queue ${evt.seq}`)
-
-    this.queue.add(async () => {
-      console.log(`current queue size: ${this.queue.size}`)
       let postsToCreates: any = []
       for (let create of postsToCreate) {
         let bot = await isBot(create.author)
@@ -203,8 +204,11 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           .onConflict((oc) => oc.doNothing())
           .execute()
       }
-    }).catch((err) => {
-      console.error('repo subscription could not process posts', err)
+
+      // update stored cursor every 20 events or so
+      if (evt.seq % 20 === 0) {
+        await this.updateCursor(evt.seq)
+      }
     })
   }
 }
