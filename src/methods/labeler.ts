@@ -57,7 +57,7 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.subscribeLabels(async function* ({ req, signal }) {
     console.log(`[subscribeLabels]${JSON.stringify(req.headers)}`)
     const outbox = new Outbox(seq)
-    for await (const evt of outbox.events(undefined, signal)) {
+    for await (const evt of outbox.events(req.headers['cf-connecting-ip'] as string, signal)) {
       yield { $type: '#labels', ...evt }
     }
   })

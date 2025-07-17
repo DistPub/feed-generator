@@ -39,7 +39,7 @@ export class Outbox {
   // 3. streaming: we're all caught up on historic state, so the sequencer outputs events and we
   // immediately yield them
   async *events(
-    backfillCursor?: number,
+    consumerId?: string,
     signal?: AbortSignal,
   ): AsyncGenerator<LabelsEvt> {
     // if not backfill, we don't need to cutover, just start streaming
@@ -69,6 +69,7 @@ export class Outbox {
         }
       } catch (err) {
         if (err instanceof AsyncBufferFullError) {
+          console.log(`Stream consumer: ${consumerId} too slow`)
           throw new InvalidRequestError(
             'Stream consumer too slow',
             'ConsumerTooSlow',
