@@ -67,6 +67,7 @@ export abstract class FirehoseSubscriptionBase {
         this.handleEvent(evt).catch((err) => {
           console.error('repo subscription could not handle message', err)
         })
+        await new Promise(setImmediate)
       }
     } catch (err) {
       console.error('repo subscription errored', err)
