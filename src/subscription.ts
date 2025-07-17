@@ -65,7 +65,6 @@ export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolea
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
     if (!isCommit(evt)) return
-
     const ops = await getOpsByType(evt)
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
     if (postsToDelete.length > 0) {
@@ -100,99 +99,112 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     if (!postsToCreate.length) return
 
-    let postsToCreates: any = []
-    for (let create of postsToCreate) {
-      let bot = await isBot(create.author)
-
-      if (bot !== 1) {
-        postsToCreates.push(create)
-        continue
-      }
-
-      // no external
-      if (!create.record?.embed?.external) {
-        continue
-      }
-
-      let external = create.record.embed.external as any
-      let content = external.title + external.description
-
-      if (!regex.test(content)) {
-        continue
-      }
-
-      let url = new URL(external.uri)
-      if (await isNotChineseWebsite(url.hostname)) {
-        continue
-      }
-
-      postsToCreates.push(create)
+    if (this.queue.size >= this.maxSize) {
+      console.log(`queue is full, skip event: ${evt.seq}`)
+      return
     }
 
-    if (!postsToCreates.length) return
+    /////////////////////////////////////////////////////////////////
+    console.log(`add task to queue ${evt.seq}`)
 
-    // check not good user
-    for (let post of postsToCreates) {
-      await isNotGoodUser(post.author, true)
-    }
+    this.queue.add(async () => {
+      console.log(`current queue size: ${this.queue.size}`)
+      let postsToCreates: any = []
+      for (let create of postsToCreate) {
+        let bot = await isBot(create.author)
 
-    let modImagePosts: any[] = []
-    let createPosts: any[] = []
-    for(let post of postsToCreates) {
-      let imgUrls = await getPostImgurls(post)
-
-      if (imgUrls && !post.record?.labels?.length) {
-        let a_nsfw = null
-        let b_nsfw = null
-        let refAuthor = ''
-        let [a, b] = imgUrls.split(';')
-
-        if (a) a_nsfw = await isNSFW(post.author)
-
-          // ref a record
-        if (b) {
-          let uri = post.record.embed.record.uri || post.record.embed.record.record.uri
-          refAuthor = getDid(uri)
-          b_nsfw = await isNSFW(refAuthor)
-        }
-
-        if (a_nsfw === -1 || b_nsfw === -1) {
-          modImagePosts.push({
-            uri: post.uri,
-            cid: post.cid,
-            indexedAt: new Date().toISOString(),
-            author: post.author,
-            refAuthor,
-            imgUrls
-          })
+        if (bot !== 1) {
+          postsToCreates.push(create)
           continue
         }
+
+        // no external
+        if (!create.record?.embed?.external) {
+          continue
+        }
+
+        let external = create.record.embed.external as any
+        let content = external.title + external.description
+
+        if (!regex.test(content)) {
+          continue
+        }
+
+        let url = new URL(external.uri)
+        if (await isNotChineseWebsite(url.hostname)) {
+          continue
+        }
+
+        postsToCreates.push(create)
       }
 
-      createPosts.push({
-        uri: post.uri,
-        cid: post.cid,
-        author: post.author,
-        indexedAt: new Date().toISOString()
-      })
-    }
+      if (!postsToCreates.length) return
 
-    // log info
-    console.log(`[FirehoseSubscription]create ${createPosts.length} posts, mod ${modImagePosts.length} posts`)
+      // check not good user
+      for (let post of postsToCreates) {
+        await isNotGoodUser(post.author, true)
+      }
 
-    if (modImagePosts.length > 0) {
-      await this.db
-        .insertInto('mod_image_post')
-        .values(modImagePosts)
-        .onConflict((oc) => oc.doNothing())
-        .execute()
-    }
-    if (createPosts.length > 0) {
-      await this.db
-        .insertInto('post')
-        .values(createPosts)
-        .onConflict((oc) => oc.doNothing())
-        .execute()
-    }
+      let modImagePosts: any[] = []
+      let createPosts: any[] = []
+      for(let post of postsToCreates) {
+        let imgUrls = await getPostImgurls(post)
+
+        if (imgUrls && !post.record?.labels?.length) {
+          let a_nsfw = null
+          let b_nsfw = null
+          let refAuthor = ''
+          let [a, b] = imgUrls.split(';')
+
+          if (a) a_nsfw = await isNSFW(post.author)
+
+            // ref a record
+          if (b) {
+            let uri = post.record.embed.record.uri || post.record.embed.record.record.uri
+            refAuthor = getDid(uri)
+            b_nsfw = await isNSFW(refAuthor)
+          }
+
+          if (a_nsfw === -1 || b_nsfw === -1) {
+            modImagePosts.push({
+              uri: post.uri,
+              cid: post.cid,
+              indexedAt: new Date().toISOString(),
+              author: post.author,
+              refAuthor,
+              imgUrls
+            })
+            continue
+          }
+        }
+
+        createPosts.push({
+          uri: post.uri,
+          cid: post.cid,
+          author: post.author,
+          indexedAt: new Date().toISOString()
+        })
+      }
+
+      // log info
+      console.log(`[FirehoseSubscription]create ${createPosts.length} posts, mod ${modImagePosts.length} posts`)
+
+      if (modImagePosts.length > 0) {
+        await this.db
+          .insertInto('mod_image_post')
+          .values(modImagePosts)
+          .onConflict((oc) => oc.doNothing())
+          .execute()
+      }
+      if (createPosts.length > 0) {
+        await this.db
+          .insertInto('post')
+          .values(createPosts)
+          .onConflict((oc) => oc.doNothing())
+          .execute()
+      }
+    }).catch((err) => {
+      console.error('repo subscription could not process posts', err)
+    })
   }
 }

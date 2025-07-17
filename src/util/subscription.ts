@@ -13,13 +13,19 @@ import {
 } from '../lexicon/types/com/atproto/sync/subscribeRepos'
 import { Database } from '../db'
 import { SocksProxyAgent } from 'socks-proxy-agent'
+import PQueue from 'p-queue'
 
 export const event_status = {'update': 'unknown'}
 
 export abstract class FirehoseSubscriptionBase {
   public sub: Subscription<RepoEvent>
+  public queue: PQueue
+  public maxSize: number
 
   constructor(public db: Database, public service: string) {
+    this.queue = new PQueue({ concurrency: parseInt(process.env.PQUEUE_CONCURRENCY as string, 10) || 30 })
+    this.maxSize = parseInt(process.env.PQUEUE_MAX_SIZE as string, 10) || 500
+
     let socks_proxy = process.env.SOCKS_PROXY
     let agent: SocksProxyAgent | null = null
     if (socks_proxy) {
@@ -58,6 +64,7 @@ export abstract class FirehoseSubscriptionBase {
   async run(subscriptionReconnectDelay: number) {
     try {
       for await (const evt of this.sub) {
+        console.log(`read event ${evt.seq}`)
         this.handleEvent(evt).catch((err) => {
           console.error('repo subscription could not handle message', err)
         })
