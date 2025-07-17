@@ -64,7 +64,6 @@ export abstract class FirehoseSubscriptionBase {
   async run(subscriptionReconnectDelay: number) {
     try {
       for await (const evt of this.sub) {
-        console.log(`read event ${evt.seq}`)
         this.handleEvent(evt).catch((err) => {
           console.error('repo subscription could not handle message', err)
         })
