@@ -61,21 +61,23 @@ export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolea
   return imgUrls
 }
 
+const stats = {skip: 0}
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
+    if (!isCommit(evt)) return
+    /////////////////////////////////////////////////////////////////
+
     if (this.queue.size >= this.maxSize) {
-      console.log(`queue is full, skip event: ${evt.seq}`)
+      stats.skip ++
       return
     }
 
-    /////////////////////////////////////////////////////////////////
-    console.log(`add task to queue ${evt.seq}`)
+    console.log(`[queue] skiped ${stats.skip} events, resume add task to queue ${evt.seq}, current size: ${this.queue.size} pending: ${this.queue.pending}`)
+    stats.skip = 0
 
     return this.queue.add(async () => {
-      console.log(`current queue size: ${this.queue.size}`)
-
-    if (!isCommit(evt)) return
+    /////////////////////////////////////////////////////////////////
     const ops = await getOpsByType(evt)
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
     if (postsToDelete.length > 0) {
