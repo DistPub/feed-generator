@@ -69,7 +69,7 @@ export class Outbox {
         }
       } catch (err) {
         if (err instanceof AsyncBufferFullError) {
-          console.error(`[outbox] Stream consumer: ${consumerId} too slow`)
+          console.warn(`[outbox] Stream consumer: ${consumerId} too slow`)
           throw new InvalidRequestError(
             'Stream consumer too slow',
             'ConsumerTooSlow',
