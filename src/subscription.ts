@@ -69,12 +69,9 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     /////////////////////////////////////////////////////////////////
 
     if (this.queue.size >= this.maxSize) {
-      stats.skip ++
+      console.warn(`[queue] skip ${evt.seq}, current size: ${this.queue.size} pending: ${this.queue.pending}`)
       return
     }
-
-    console.log(`[queue] skiped ${stats.skip} events, resume add task to queue ${evt.seq}, current size: ${this.queue.size} pending: ${this.queue.pending}`)
-    stats.skip = 0
 
     return this.queue.add(async () => {
     /////////////////////////////////////////////////////////////////
