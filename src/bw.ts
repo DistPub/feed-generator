@@ -1,6 +1,6 @@
-import { formatDate, getDB, getOffsetDate } from './dbpool'
+import { formatDate, getDB, getOffsetDate, storage } from './dbpool'
 import { seq } from './config'
-import { lexToJson } from '@atproto/lexicon'
+import { Database } from './db'
 
 export async function getBW(did: string) {
     let today = new Date()
@@ -90,6 +90,19 @@ export async function isBot(did: string) {
     return await computeBot(did, ret)
 }
 
+async function removeFromDB(did: string) {
+  const db = storage.main as Database
+  await db.deleteFrom('post')
+      .where('post.author', '=', did)
+      .execute()
+  await db.deleteFrom('mod_image_post')
+      .where('mod_image_post.author', '=', did)
+      .execute()
+  await db.deleteFrom('report_image_post')
+      .where('report_image_post.author', '=', did)
+      .execute()
+}
+
 export async function computeBot(did: string, ret: any = undefined) {
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getAuthorFeed?actor=${did}&filter=posts_no_replies&includePins=false&limit=30`
     let response = await fetch(url)
@@ -106,6 +119,7 @@ export async function computeBot(did: string, ret: any = undefined) {
 
     if (ret.bot) {
       await putBW([ret])
+      await removeFromDB(did)
       return ret.bot
     }
 
@@ -132,6 +146,10 @@ export async function computeBot(did: string, ret: any = undefined) {
     }
 
     await putBW([ret])
+
+    if (ret.bot) {
+      await removeFromDB(did)
+    }
     return ret.bot
 }
 

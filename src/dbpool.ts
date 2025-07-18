@@ -1,6 +1,8 @@
 import SqliteDb from 'better-sqlite3'
 import { Kysely, Migrator, SqliteDialect } from 'kysely'
 
+export const storage: any = {}
+
 type Database = Kysely<DatabaseSchema>
 
 // schema
