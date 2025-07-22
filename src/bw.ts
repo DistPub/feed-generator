@@ -169,8 +169,16 @@ const nsfw_labels: string[] = [
 async function fetchModRs(did: string) {
   let aturi = `at://${did}/app.bsky.feed.post/*`
   let url = `${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${encodeURIComponent(aturi)}&limit=50`
+  console.log(url)
   let response = await fetch(url)
-  let data = await response.json() as any
+
+  let data;
+  try {
+    data = await response.json() as any
+  } catch (error) {
+    return -1
+  }
+  
   let labels = data.labels.filter(item => {
     return nsfw_labels.includes(item.val)
   })
