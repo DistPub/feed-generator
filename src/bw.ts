@@ -107,12 +107,19 @@ export async function computeBot(did: string, ret: any = undefined) {
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getAuthorFeed?actor=${did}&filter=posts_no_replies&includePins=false&limit=30`
     let response = await fetch(url)
     let data = await response.json() as any
-    if (data.error || data.feed.length < 30) {
+    if (data.error || data.feed.length < 4) {
         return -1
     }
+
+    // check frequncy
     let a = new Date(data.feed[0].post.record.createdAt) as any
     let b = new Date(data.feed[data.feed.length - 1].post.record.createdAt) as any
-    let t = (a - b)/data.feed.length/1000/60/60
+    let t: number;
+    if (data.feed.length < 30) {
+      t = (a - b)/(data.feed.length - 1)/1000/60
+    } else {
+      t = (a - b)/(data.feed.length - 1)/1000/60/60
+    }
 
     if (ret === undefined) ret = await getBW(did)
     ret.bot = t < 1 ? 1 : 0
@@ -123,6 +130,7 @@ export async function computeBot(did: string, ret: any = undefined) {
       return ret.bot
     }
 
+    // check content link percentage
     let counter = 0
     for (let feed of data.feed) {
       if (feed.post.record?.facets) {
@@ -141,7 +149,7 @@ export async function computeBot(did: string, ret: any = undefined) {
       }
     }
 
-    if (counter >= (data.feed.length * 0.8)) {
+    if (counter >= (data.feed.length * 0.8) && data.feed.length >= 30) {
       ret.bot = 1
     }
 
