@@ -30,6 +30,9 @@ export async function getPostByUri(uri: string) {
 	console.log(`get post fetch url: ${url}`)
 
 	let data = await response.json() as any
+
+	if (data.error) return
+	
 	let post: CreateOp<Record> = {
 		author: data.thread.post.author.did,
 		record: data.thread.post.record,

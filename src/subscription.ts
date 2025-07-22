@@ -44,13 +44,16 @@ export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolea
       let record: any = post.record.embed.record
       let uri = record.uri || record.record.uri
       let subPost = await getPostByUri(uri)
-      let subImgUrls = await getPostImgurls(subPost, false, false)
 
-      if (subImgUrls) {
-        if (imgUrls) {
-          imgUrls += `;${subImgUrls}`
-        } else {
-          imgUrls = subImgUrls
+      if (subPost) {
+        let subImgUrls = await getPostImgurls(subPost, false, false)
+
+        if (subImgUrls) {
+          if (imgUrls) {
+            imgUrls += `;${subImgUrls}`
+          } else {
+            imgUrls = subImgUrls
+          }
         }
       }
     }

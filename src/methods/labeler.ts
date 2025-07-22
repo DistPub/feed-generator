@@ -116,29 +116,32 @@ export default function (server: Server, ctx: AppContext) {
       } else {
         console.log(`report nsfw uri: ${uri} cid: ${cid}`)
         let post = await getPostByUri(uri)
-        let imgUrls = await getPostImgurls(post, false, false)
 
-        if (imgUrls && !post.record?.labels?.length) {
-          ret = await isNSFW(post.author, false)
+        if (post) {
+          let imgUrls = await getPostImgurls(post, false, false)
 
-          if (ret === -1) {
-            let rows = [{
-              uri: post.uri,
-              cid: post.cid,
-              indexedAt: new Date().toISOString(),
-              author: post.author,
-              imgUrls
-            }]
+          if (imgUrls && !post.record?.labels?.length) {
+            ret = await isNSFW(post.author, false)
 
-            await ctx.db
-            .insertInto('report_image_post')
-            .values(rows)
-            .onConflict((oc) => oc.doNothing())
-            .execute()
-            console.log(`save to report db`)
+            if (ret === -1) {
+              let rows = [{
+                uri: post.uri,
+                cid: post.cid,
+                indexedAt: new Date().toISOString(),
+                author: post.author,
+                imgUrls
+              }]
+
+              await ctx.db
+              .insertInto('report_image_post')
+              .values(rows)
+              .onConflict((oc) => oc.doNothing())
+              .execute()
+              console.log(`save to report db`)
+            }
+          } else {
+            console.log(`no img found or record already labeled`)
           }
-        } else {
-          console.log(`no img found or record already labeled`)
         }
       }
     }
