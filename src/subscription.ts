@@ -6,7 +6,7 @@ import { CreateOp, FirehoseSubscriptionBase, getOpsByType, OperationsByType } fr
 import { isBot, isNSFW, isNotChineseWebsite, isNotGoodUser, signLabel } from './bw'
 import { Record } from './lexicon/types/app/bsky/feed/post';
 import { getDid, getPostByUri, seq } from './config';
-import { getDB } from './dbpool';
+import { delayToSync, getDB } from './dbpool';
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
@@ -205,6 +205,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const created = ops.listitems.creates.filter(item => item.author == process.env.ADMIN_DID)
     if (created.length) {
       console.log(`admin create ${created.length} list item, not-good user label will emit right now.`)
+      // not.db will generate */10 minuts, put delay to sync not.db, make sure the sync will use newer version
+      delayToSync.time = new Date(Date.now() + 15 * 60000)
       const notGoodUsers = created.map(item => {return {did: item.record.subject}})
       let db = await getDB('not.db', false, false)
       await db

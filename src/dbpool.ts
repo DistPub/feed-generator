@@ -148,7 +148,10 @@ function downloadFile(url, savePath) {
 
 import { seq } from './config'
 import { computeBot, getBW, signLabel } from './bw'
+export const delayToSync = {time: new Date(0)}
 export async function syncDBFile() {
+  const now = new Date()
+  if (now < delayToSync.time) return
   let synckey = 'sync.db'
   await downloadFile(process.env.NOT_DB_URL, absKey(synckey));
 
