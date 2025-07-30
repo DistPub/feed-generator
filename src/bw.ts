@@ -112,22 +112,23 @@ export async function computeBot(did: string, ret: any = undefined) {
     }
 
     // check frequncy
-    let a = new Date(data.feed[0].post.record.createdAt) as any
+    const feeds = [...data.feed]
+    let a = new Date(feeds[0].post.record.createdAt) as any
     let b: number;
     let t: number;
     
-    if (data.feed.length < 30) {
+    if (feeds.length < 30) {
       do {
-        b = new Date(data.feed.pop().post.record.createdAt) as any
-        t = (a - b)/data.feed.length/1000/60
+        b = new Date(feeds.pop().post.record.createdAt) as any
+        t = (a - b)/feeds.length/1000/60
         if (t < 1) break
-      } while (data.feed.length >= 4)
+      } while (feeds.length >= 4)
     } else {
       do {
-        b = new Date(data.feed.pop().post.record.createdAt) as any
-        t = (a - b)/data.feed.length/1000/60/60
+        b = new Date(feeds.pop().post.record.createdAt) as any
+        t = (a - b)/feeds.length/1000/60/60
         if (t < 1) break
-      } while (data.feed.length >= 13)
+      } while (feeds.length >= 13)
     }
 
     if (ret === undefined) ret = await getBW(did)
