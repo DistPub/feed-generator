@@ -3,9 +3,10 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { CreateOp, FirehoseSubscriptionBase, getOpsByType, OperationsByType } from './util/subscription'
-import { isBot, isNSFW, isNotChineseWebsite, isNotGoodUser } from './bw'
+import { isBot, isNSFW, isNotChineseWebsite, isNotGoodUser, signLabel } from './bw'
 import { Record } from './lexicon/types/app/bsky/feed/post';
-import { getDid, getPostByUri } from './config';
+import { getDid, getPostByUri, seq } from './config';
+import { getDB } from './dbpool';
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
@@ -195,8 +196,35 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         .execute()
     }
   }
-  async handleListItemToDelete(ops: OperationsByType) {}
-  async handleListItemToCreate(ops: OperationsByType) {}
+  async handleListItemToDelete(ops: OperationsByType) {
+    const removed = ops.listitems.deletes.map(item => getDid(item.uri)).filter(item => item == process.env.ADMIN_DID)
+    if (removed.length)
+      console.log(`admin remove ${removed.length} list item, not-good user label will emit after sync not db.`)
+  }
+  async handleListItemToCreate(ops: OperationsByType) {
+    const created = ops.listitems.creates.filter(item => item.author == process.env.ADMIN_DID)
+    if (created.length) {
+      console.log(`admin create ${created.length} list item, not-good user label will emit right now.`)
+      const notGoodUsers = created.map(item => {return {did: item.record.subject}})
+      let db = await getDB('not.db', false, false)
+      await db
+        .insertInto('not_good_user')
+        .values(notGoodUsers)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+
+      let labels = notGoodUsers.map(item => {
+        return {
+          uri: item.did,
+          val: 'not-good',
+          cts: new Date().toISOString()
+        }
+      })
+      labels = labels.map(item => (signLabel({src: process.env.LABELER_DID, ...item})))
+      let events = [{ seq: new Date().getTime(), labels}]
+      seq.emit('events', events)
+    }
+  }
   async handleEvent(evt: RepoEvent) {
     if (!isCommit(evt)) return
     /////////////////////////////////////////////////////////////////
