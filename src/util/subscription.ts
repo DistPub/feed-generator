@@ -6,6 +6,7 @@ import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
 import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
+import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
 import {
   Commit,
   OutputSchema as RepoEvent,
@@ -103,6 +104,7 @@ export const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
     reposts: { creates: [], deletes: [] },
     likes: { creates: [], deletes: [] },
     follows: { creates: [], deletes: [] },
+    listitems: { creates: [], deletes: [] },
   }
 
   for (const op of evt.ops) {
@@ -125,6 +127,8 @@ export const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
         opsByType.likes.creates.push({ record, ...create })
       } else if (collection === ids.AppBskyGraphFollow && isFollow(record)) {
         opsByType.follows.creates.push({ record, ...create })
+      } else if (collection === ids.AppBskyGraphListitem && isListItem(record)) {
+        opsByType.listitems.creates.push({record, ...create})
       }
     }
 
@@ -137,6 +141,8 @@ export const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
         opsByType.likes.deletes.push({ uri })
       } else if (collection === ids.AppBskyGraphFollow) {
         opsByType.follows.deletes.push({ uri })
+      } else if (collection === ids.AppBskyGraphListitem) {
+        opsByType.listitems.deletes.push({uri})
       }
     }
   }
@@ -144,11 +150,12 @@ export const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
   return opsByType
 }
 
-type OperationsByType = {
+export type OperationsByType = {
   posts: Operations<PostRecord>
   reposts: Operations<RepostRecord>
   likes: Operations<LikeRecord>
   follows: Operations<FollowRecord>
+  listitems: Operations<ListItemRecord>
 }
 
 type Operations<T = Record<string, unknown>> = {
@@ -181,6 +188,10 @@ export const isLike = (obj: unknown): obj is LikeRecord => {
 
 export const isFollow = (obj: unknown): obj is FollowRecord => {
   return isType(obj, ids.AppBskyGraphFollow)
+}
+
+export const isListItem = (obj: unknown): obj is ListItemRecord => {
+  return isType(obj, ids.AppBskyGraphListitem)
 }
 
 const isType = (obj: unknown, nsid: string) => {
