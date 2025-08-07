@@ -36,37 +36,39 @@ export default function (server: Server, ctx: AppContext) {
         rets.push(record)
       }
     }
-    await putBW(rets)
 
-    let authors = rets.map((item: any) => item.did)
-    authors.push('')
+    if (rets.length) {
+      await putBW(rets)
 
-    // feed mod callback
-    if (move) {
-      await ctx.db.insertInto('post')
-      .columns(["uri", "cid", "author", "indexedAt"])
-      .expression((eb) => eb
-        .selectFrom('mod_image_post')
-        .select((eb) => [
-          'mod_image_post.uri',
-          'mod_image_post.cid',
-          'mod_image_post.author',
-          eb.val(new Date().toISOString()).as('indexedAt')
-        ])
+      let authors = rets.map((item: any) => item.did)
+
+      // feed mod callback
+      if (move) {
+        await ctx.db.insertInto('post')
+        .columns(["uri", "cid", "author", "indexedAt"])
+        .expression((eb) => eb
+          .selectFrom('mod_image_post')
+          .select((eb) => [
+            'mod_image_post.uri',
+            'mod_image_post.cid',
+            'mod_image_post.author',
+            eb.val(new Date().toISOString()).as('indexedAt')
+          ])
+          .where('mod_image_post.author', 'in', authors)
+          .where('mod_image_post.refAuthor', 'in', authors)
+        )
+        .execute();
+
+        await ctx.db.deleteFrom('mod_image_post')
         .where('mod_image_post.author', 'in', authors)
         .where('mod_image_post.refAuthor', 'in', authors)
-      )
-      .execute();
-
-      await ctx.db.deleteFrom('mod_image_post')
-      .where('mod_image_post.author', 'in', authors)
-      .where('mod_image_post.refAuthor', 'in', authors)
-      .execute()
-    } else {
-      // user report callback
-      await ctx.db.deleteFrom('report_image_post')
-      .where('report_image_post.author', 'in', authors)
-      .execute()
+        .execute()
+      } else {
+        // user report callback
+        await ctx.db.deleteFrom('report_image_post')
+        .where('report_image_post.author', 'in', authors)
+        .execute()
+      }
     }
     return {
       encoding: 'application/json',
