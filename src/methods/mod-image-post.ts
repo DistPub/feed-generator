@@ -45,6 +45,8 @@ export default function (server: Server, ctx: AppContext) {
 
     // feed mod callback
     if (move) {
+      // refAuthor can be empty
+      authors.push('')
       await ctx.db.insertInto('post')
       .columns(["uri", "cid", "author", "indexedAt"])
       .expression((eb) => eb
