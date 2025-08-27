@@ -10,6 +10,20 @@ import { seq, getPostByUri, getDid } from '../config'
 import { syncDBFile } from '../dbpool'
 
 export const http_server = {'express': <any>null}
+export const commandRestart = () => {
+  console.log('force close server after 60 seconds')
+  setTimeout(() => {process.exit(1)}, 60000)
+
+  // try graceful
+  http_server['express'].close((err) => {
+    if (err) {
+        console.error('Error closing server:', err);
+    } else {
+        console.log('Server successfully closed.');
+    }
+    process.exit(err ? 1 : 0)
+  })
+}
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ req, params }) => {
@@ -86,18 +100,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:restart') {
-      console.log('force close server after 60 seconds')
-      setTimeout(() => {process.exit(1)}, 60000)
-
-      // try graceful
-      http_server['express'].close((err) => {
-        if (err) {
-            console.error('Error closing server:', err);
-        } else {
-            console.log('Server successfully closed.');
-        }
-        process.exit(err ? 1 : 0)
-      })
+      commandRestart()
     }
 
     else if (reasonType === 'com.atproto.moderation.defs#reasonSpam') {

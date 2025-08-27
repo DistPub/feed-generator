@@ -5,6 +5,13 @@ import algos from '../algos'
 import { validateAuth } from '../auth'
 import { AtUri } from '@atproto/syntax'
 import { event_status } from '../util/subscription'
+import { commandRestart } from './labeler'
+
+function isValidAndOver60s(date) {
+  const ts = date.getTime()
+  if (isNaN(ts)) return false
+  return (Date.now() - ts) > 60000
+}
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
@@ -20,15 +27,12 @@ export default function (server: Server, ctx: AppContext) {
         'UnsupportedAlgorithm',
       )
     }
-    /**
-     * Example of how to check auth if giving user-specific results:
-     *
-     * const requesterDid = await validateAuth(
-     *   req,
-     *   ctx.cfg.serviceDid,
-     *   ctx.didResolver,
-     * )
-     */
+    
+    const update = new Date(event_status['update'])
+    if (isValidAndOver60s(update)) {
+      console.log('relay event message not received more than 60 seconds, try restart to fix')
+      commandRestart()
+    }
 
     const body = await algo(ctx, params)
     return {
