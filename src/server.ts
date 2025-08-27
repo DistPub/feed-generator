@@ -84,7 +84,7 @@ export class FeedGenerator {
     }, 24*60*60000)
     setInterval(async () => {
       await checkTalkTooMUchPeopleIsBot(this.db)
-    }, 8*60*60000)
+    }, 60*60000)
   }
 
   async start(): Promise<http.Server> {
