@@ -89,14 +89,19 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         return true
       })
       .filter((create) => {
-        // langs exists
-        if (create.record?.langs) {
-          let langs = create.record.langs as Array<string>
-          return langs.includes('zh') && !langs.includes('ko') && !langs.includes('ja')
+        // check content first
+        const matched = regex.test(create.record.text)
+        if (matched) {
+          return true
         }
 
-        // no langs set
-        return regex.test(create.record.text)
+        // content not match, check langs
+        if (!create.record?.langs) {
+          return false
+        }
+
+        let langs = create.record.langs as Array<string>
+        return langs.includes('zh') && !langs.includes('ko') && !langs.includes('ja')
       })
 
     if (!postsToCreate.length) return
