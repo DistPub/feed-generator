@@ -15,6 +15,13 @@ function isValidAndOver60s(date) {
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
+    if (params.feed == 'at://did:web:cgv.hukoubook.com/app.bsky.feed.generator/china-good-voice') {
+      return {
+        encoding: 'application/json',
+        body: {feed: [{post: "at://did:web:cgv.hukoubook.com/app.bsky.feed.post/3lmjfrs5jc226"}]}
+      }
+    }
+
     const feedUri = new AtUri(params.feed)
     const algo = algos[feedUri.rkey]
     if (
