@@ -12,6 +12,7 @@ import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
 import wellKnown from './well-known'
 import { initDBPool, deleteDB, syncDBFile, checkTalkTooMUchPeopleIsBot, storage } from './dbpool'
+import { loggerMiddleware } from './logger'
 
 export class FeedGenerator {
   public app: express.Application
@@ -34,6 +35,7 @@ export class FeedGenerator {
 
   static create(cfg: Config) {
     const app = express()
+    app.use(loggerMiddleware)
     const db = createDb(process.env.DB_HOME + cfg.sqliteLocation)
     storage.main = db
     const firehose = new FirehoseSubscription(db, cfg.subscriptionEndpoint)
