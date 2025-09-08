@@ -15,6 +15,10 @@
           "limit": {
             "type": "integer",
             "default": 100
+          },
+          "uri": {
+            "type": "string",
+            "format": "at-uri"
           }
         }
       },

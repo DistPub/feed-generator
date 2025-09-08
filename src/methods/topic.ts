@@ -24,19 +24,25 @@ export default function (server: Server, ctx: AppContext) {
     }
   })
   server.com.hukoubook.fg.getTopicTrending(async ({params}) => {
-    const topics = await ctx.db
+    let query = ctx.db
         .selectFrom('topic')
         .select(['topic'])
         .select(eb => [
             eb.fn.max('time').as('updatedAt'),
             eb.fn.count('uri').as('count'),
         ])
+
+    if (params.uri) {
+      query = query.where('uri', '=', params.uri).groupBy('topic')
+    } else {
+      query = query
         .groupBy('topic')
         .having(eb => eb.fn.count('uri'), '>', params.min)
         .orderBy('count', 'desc')
         .limit(params.limit)
-        .execute();
+    }
 
+    const topics = await query.execute();
     const notGood = await Promise.all(
         topics.map(async row => Boolean(await isNotGoodTopic(row.topic)))
     );
