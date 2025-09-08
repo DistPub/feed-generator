@@ -43,7 +43,7 @@
         async function fetchTrendingTopics() {
             const tableBody = document.querySelector('#trending-table tbody');
             try {
-                const response = await fetch('/xrpc/com.hukoubook.fg.getTopicTrending');
+                const response = await fetch(`/xrpc/com.hukoubook.fg.getTopicTrending${location.search}`);
                 if (!response.ok) throw new Error('网络错误');
                 const data = await response.json();
                 // 假设返回数据结构为 { topics: [{ topic, score, updatedAt }, ...] }

@@ -1,0 +1,36 @@
+{
+    "lexicon": 1,
+    "id": "com.hukoubook.fg.removeTopicPosts",
+    "defs": {
+      "main": {
+        "type": "procedure",
+        "description": "remove topic related posts from db",
+        "input": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["topics"],
+            "properties": {
+                "topics": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                }
+            }
+          }
+        },
+        "output": {
+          "encoding": "application/json",
+          "schema": {
+            "type": "object",
+            "required": ["message"],
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  

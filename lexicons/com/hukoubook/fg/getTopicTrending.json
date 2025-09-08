@@ -5,6 +5,19 @@
     "main": {
       "type": "query",
       "description": "get topic trending from db",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "min": {
+            "type": "integer",
+            "default": 3
+          },
+          "limit": {
+            "type": "integer",
+            "default": 100
+          }
+        }
+      },
       "output": {
         "encoding": "application/json",
         "schema": {
