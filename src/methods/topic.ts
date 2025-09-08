@@ -38,15 +38,18 @@ export default function (server: Server, ctx: AppContext) {
       } else {
         query = query.where('uri', '=', params.uri).groupBy('topic')
       }
+    } else if (params.search) {
+      query = query.where('topic', 'like', `%${params.search}%`).groupBy('topic')
     } else {
       query = query
         .groupBy('topic')
         .having(eb => eb.fn.count('uri'), '>', params.min)
-        .orderBy('count', 'desc')
-        .limit(params.limit)
     }
 
-    const topics = await query.execute();
+    const topics = await query
+      .orderBy('count', 'desc')
+      .limit(params.limit)
+      .execute();
     const notGood = await Promise.all(
         topics.map(async row => Boolean(await isNotGoodTopic(row.topic)))
     );

@@ -183,6 +183,14 @@ Welcome to becoming a guardian of Vcity nodes
 
 欢迎成为Vcity节点守护者
 #谢章 #第五城VM #数藏 #Vcity.app`,
+`Immerse yourself in the digital world
+Chase the digital wave
+Welcome to Metaverse
+Make every moment full of surprises
+#ZhangXie#Vcity#VcityMeta`,
+`Vcity NFT Marketplace 
+Data Transparency Smart Trading
+#ZhangXie#Vcity#VcityMeta`,
 ]
 import dotenv from 'dotenv'
 import { updateJieBaDict, tokenize, removeUrlsAndMentions, getTopics, zhTokenSeparator } from './topic'

@@ -19,6 +19,9 @@
           "uri": {
             "type": "string",
             "format": "at-uri"
+          },
+          "search": {
+            "type": "string"
           }
         }
       },
