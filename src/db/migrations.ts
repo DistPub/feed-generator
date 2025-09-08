@@ -86,8 +86,14 @@ migrations['005'] = {
       .on('topic')
       .columns(['topic', 'time desc'])   // 复合 + 倒序
       .execute();
+    await db.schema
+      .createIndex('idx_topic_topic')
+      .on('topic')
+      .columns(['topic'])
+      .execute();
   },
   async down(db: Kysely<unknown>) {
+    await db.schema.dropIndex('idx_topic_topic').execute()
     await db.schema.dropIndex('idx_topic_topic_time').execute()
     await db.schema.dropTable('topic').execute()
   },

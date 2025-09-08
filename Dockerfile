@@ -10,6 +10,7 @@ COPY package.json yarn.lock /app
 RUN yarn install
 COPY lexicons /app/lexicons
 COPY src /app/src
+COPY public /app/public
 COPY tsconfig.json /app/
 RUN ls -al && yarn codegen && yarn build
 EXPOSE 3001
