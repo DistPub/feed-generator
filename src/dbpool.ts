@@ -17,10 +17,14 @@ type NotChineseWebsite = {
 type NotGoodUser = {
   did: string
 }
+type NotGoodTopic = {
+  topic: string
+}
 type DatabaseSchema = {
     black_white: BlackWhite
     not_chinese_website: NotChineseWebsite
     not_good_user: NotGoodUser
+    not_good_topic: NotGoodTopic
 }
 const createDb = (location: string): Database => {
   return new Kysely<DatabaseSchema>({

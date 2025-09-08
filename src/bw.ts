@@ -248,6 +248,15 @@ export async function isNotChineseWebsite(hostname: string) {
     return rows.length
 }
 
+export async function isNotGoodTopic(topic: string) {
+  let db = await getDB('not.db', false, false)
+  let rows = await db.selectFrom('not_good_topic')
+  .selectAll()
+  .where('not_good_topic.topic', '=', topic)
+  .execute()
+  return rows.length
+}
+
 export async function isNotGoodUser(did: string, emit: boolean = false) {
   let db = await getDB('not.db', false, false)
   let rows = await db.selectFrom('not_good_user')

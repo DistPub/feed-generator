@@ -3,7 +3,7 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { CreateOp, FirehoseSubscriptionBase, getOpsByType, OperationsByType } from './util/subscription'
-import { isBot, isNSFW, isNotChineseWebsite, isNotGoodUser, signLabel } from './bw'
+import { isBot, isNSFW, isNotChineseWebsite, isNotGoodTopic, isNotGoodUser, signLabel } from './bw'
 import { Record } from './lexicon/types/app/bsky/feed/post';
 import { getDid, getPostByUri, seq } from './config';
 import { delayToSync, getDB } from './dbpool';
@@ -138,11 +138,23 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     if (!postsToCreates.length) return
 
+    // skip not good topic
+    const skipNotGoodTopic = await Promise.all(postsToCreates.map(async (post) => {
+      const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
+      for (let topic of topics) {
+        if (await isNotGoodTopic(topic)) {
+          return false
+        }
+      }
+      return true
+    }))
+    postsToCreate = postsToCreates.filter((_, i) => skipNotGoodTopic[i])
+
+    if (!postsToCreates.length) return
+
     // check not good user
     for (let post of postsToCreates) {
       await isNotGoodUser(post.author, true)
-      const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
-      if (topics.length) console.log(topics.join('\n'))
     }
 
     let modImagePosts: any[] = []
