@@ -148,7 +148,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       }
       return true
     }))
-    postsToCreate = postsToCreates.filter((_, i) => skipNotGoodTopic[i])
+    postsToCreates = postsToCreates.filter((_, i) => skipNotGoodTopic[i])
 
     if (!postsToCreates.length) return
 
