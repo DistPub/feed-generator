@@ -6,6 +6,7 @@ import { createServer } from './lexicon'
 import feedGeneration from './methods/feed-generation'
 import describeGenerator from './methods/describe-generator'
 import modImagePost from './methods/mod-image-post'
+import topicTrending from './methods/topic'
 import labeler, { http_server } from './methods/labeler'
 import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
@@ -64,6 +65,7 @@ export class FeedGenerator {
     feedGeneration(server, ctx)
     describeGenerator(server, ctx)
     modImagePost(server, ctx)
+    topicTrending(server, ctx)
     labeler(server, ctx)
     app.use(server.xrpc.router)
     app.use(wellKnown(ctx))

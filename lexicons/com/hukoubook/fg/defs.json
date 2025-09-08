@@ -10,6 +10,16 @@
       },
       "required": ["did", "category"]
     },
+    "topicTrendingView": {
+      "type": "object",
+      "properties": {
+        "topic": { "type": "string" },
+        "count": { "type": "integer" },
+        "updatedAt": { "type": "string" },
+        "notGood": { "type": "boolean" }
+      },
+      "required": ["topic", "count", "updatedAt"]
+    },
     "modImagePostView": {
       "type": "object",
       "properties": {

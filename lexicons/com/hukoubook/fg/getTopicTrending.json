@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.hukoubook.fg.getTopicTrending",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "get topic trending from db",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["topics"],
+          "properties": {
+            "topics": {
+              "type": "array",
+              "items": { "type": "ref", "ref": "com.hukoubook.fg.defs#topicTrendingView" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
