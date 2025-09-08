@@ -7,6 +7,7 @@ import { isBot, isNSFW, isNotChineseWebsite, isNotGoodUser, signLabel } from './
 import { Record } from './lexicon/types/app/bsky/feed/post';
 import { getDid, getPostByUri, seq } from './config';
 import { delayToSync, getDB } from './dbpool';
+import { tokenize, removeUrlsAndMentions, zhTokenSeparator, getTopics } from './topic';
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
@@ -140,6 +141,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     // check not good user
     for (let post of postsToCreates) {
       await isNotGoodUser(post.author, true)
+      const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
+      if (topics.length) console.log(topics.join('\n'))
     }
 
     let modImagePosts: any[] = []

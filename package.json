@@ -14,6 +14,7 @@
     "unconfigLabeler": "ts-node scripts/unconfigLabeler.ts",
     "unpublishFeed": "ts-node scripts/unpublishFeedGen.ts",
     "start": "ts-node src/index.ts",
+    "tt": "ts-node src/tt.ts",
     "build": "tsc",
     "codegen": "find lexicons -name '*.json'|xargs npx lex gen-server --yes src/lexicon"
   },
@@ -27,6 +28,7 @@
     "@atproto/syntax": "^0.1.2",
     "@atproto/xrpc-server": "^0.7.9",
     "@did-plc/lib": "^0.0.4",
+    "@node-rs/jieba": "^2.0.1",
     "better-sqlite3": "^11.3.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
@@ -35,7 +37,8 @@
     "p-queue": "6",
     "pino": "8.21.0",
     "pino-http": "8.2.1",
-    "socks-proxy-agent": "^8.0.5"
+    "socks-proxy-agent": "^8.0.5",
+    "stopword": "^3.1.5"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",

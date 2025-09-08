@@ -13,6 +13,7 @@ import { AppContext, Config } from './config'
 import wellKnown from './well-known'
 import { initDBPool, deleteDB, syncDBFile, checkTalkTooMUchPeopleIsBot, storage } from './dbpool'
 import { loggerMiddleware } from './logger'
+import { updateJieBaDict } from './topic'
 
 export class FeedGenerator {
   public app: express.Application
@@ -86,6 +87,7 @@ export class FeedGenerator {
     }, 24*60*60000)
     setInterval(async () => {
       await checkTalkTooMUchPeopleIsBot(this.db)
+      await updateJieBaDict()
     }, 60*60000)
   }
 
@@ -94,6 +96,7 @@ export class FeedGenerator {
     await initDBPool()
     await syncDBFile()
     await migrateToLatest(this.db)
+    await updateJieBaDict()
     this.firehose.run(this.cfg.subscriptionReconnectDelay)
     this.server = this.app.listen(this.cfg.port, this.cfg.listenhost)
     http_server['express'] = this.server
