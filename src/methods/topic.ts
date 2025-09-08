@@ -33,7 +33,11 @@ export default function (server: Server, ctx: AppContext) {
         ])
 
     if (params.uri) {
-      query = query.where('uri', '=', params.uri).groupBy('topic')
+      if (params.uri.endsWith('*')) {
+        query = query.where('uri', 'like', params.uri.replace('*', '%')).groupBy('topic')
+      } else {
+        query = query.where('uri', '=', params.uri).groupBy('topic')
+      }
     } else {
       query = query
         .groupBy('topic')
