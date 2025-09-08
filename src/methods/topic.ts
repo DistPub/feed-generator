@@ -1,9 +1,10 @@
 import { Server } from '../lexicon'
 import { AppContext } from '../config'
-import { isNotGoodTopic } from '../bw';
+import { addNotGoodTopics, isNotGoodTopic } from '../bw';
 
 export default function (server: Server, ctx: AppContext) {
   server.com.hukoubook.fg.removeTopicPosts(async ({ input }) => {
+    await addNotGoodTopics(input.body.topics)
     const rows = await ctx.db
         .selectFrom('topic')
         .selectAll()

@@ -257,6 +257,19 @@ export async function isNotGoodTopic(topic: string) {
   return rows.length
 }
 
+export async function addNotGoodTopics(topics: string[]) {
+  let db = await getDB('not.db', false, false)
+  await db
+    .insertInto('not_good_topic')
+    .values(topics.map(topic => {
+      return {
+        topic
+      }
+    }))
+    .onConflict((oc) => oc.doNothing())
+    .execute()
+}
+
 export async function isNotGoodUser(did: string, emit: boolean = false) {
   let db = await getDB('not.db', false, false)
   let rows = await db.selectFrom('not_good_user')

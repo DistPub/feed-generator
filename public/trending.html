@@ -48,7 +48,7 @@
                 const data = await response.json();
                 // 假设返回数据结构为 { topics: [{ topic, score, updatedAt }, ...] }
                 if (!data.topics || !Array.isArray(data.topics) || data.topics.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="3">暂无数据</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="4">暂无数据</td></tr>';
                     return;
                 }
                 tableBody.innerHTML = data.topics.map(item => `
@@ -60,7 +60,7 @@
                     </tr>
                 `).join('');
             } catch (e) {
-                tableBody.innerHTML = `<tr><td colspan="3">加载失败: ${e.message}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="4">加载失败: ${e.message}</td></tr>`;
             }
         }
         fetchTrendingTopics();
