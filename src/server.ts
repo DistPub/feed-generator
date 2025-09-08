@@ -82,6 +82,10 @@ export class FeedGenerator {
         .deleteFrom('mod_image_post')
         .where('indexedAt', '<=', new Date(Date.now() - 12 * 60 * 60000).toISOString())
         .execute()
+      await this.db
+        .deleteFrom('topic')
+        .where('time', '<=', Date.now() - 12 * 60 * 60000)
+        .execute()
       await syncDBFile()
     }, 60*60000)
     setInterval(async () => {
