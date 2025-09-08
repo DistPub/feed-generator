@@ -141,6 +141,19 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     // skip not good topic
     const skipNotGoodTopic = await Promise.all(postsToCreates.map(async (post) => {
       const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
+
+      await this.db
+        .insertInto('topic')
+        .values(topics.map(topic => {
+          return {
+            topic,
+            uri: post.uri,
+            time: Date.now()
+          }
+        }))
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+
       for (let topic of topics) {
         if (await isNotGoodTopic(topic)) {
           return false

@@ -73,3 +73,22 @@ migrations['004'] = {
     await db.schema.alterTable('post').dropColumn('author').execute()
   },
 }
+migrations['005'] = {
+  async up(db: Kysely<unknown>) {
+    await db.schema
+      .createTable('topic')
+      .addColumn('uri', 'varchar', (col) => col.primaryKey())
+      .addColumn('topic', 'varchar', (col) => col.notNull())
+      .addColumn('time', 'integer', (col) => col.notNull())
+      .execute()
+    await db.schema
+      .createIndex('idx_topic_topic_time')
+      .on('topic')
+      .columns(['topic', 'time desc'])   // 复合 + 倒序
+      .execute();
+  },
+  async down(db: Kysely<unknown>) {
+    await db.schema.dropIndex('idx_topic_topic_time').execute()
+    await db.schema.dropTable('topic').execute()
+  },
+}

@@ -3,6 +3,13 @@ export type DatabaseSchema = {
   sub_state: SubState
   mod_image_post: ModImagePost
   report_image_post: ReportImagePost
+  topic: Topic
+}
+
+export type Topic = {
+  topic: string
+  uri: string
+  time: number
 }
 
 export type Post = {
