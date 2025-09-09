@@ -167,7 +167,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           console.error('getocrTopics failed:', e);
         }
       }
-
+      
+      let selectPost = true
       if (topics.length) {
         await this.db
           .insertInto('topic')
@@ -180,14 +181,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           }))
           .onConflict((oc) => oc.doNothing())
           .execute()
-      }
-      let selectPost = true
-      if (await authorPostNotGoodTopic(post.author, topics)) {
-        selectPost = false
-        let ret = await getBW(post.author)
-        ret.bot = 1
-        await putBW([ret])
-        await removeFromDB(post.author)
+        if (await authorPostNotGoodTopic(post.author, topics)) {
+          selectPost = false
+          let ret = await getBW(post.author)
+          ret.bot = 1
+          await putBW([ret])
+          await removeFromDB(post.author)
+        }
       }
       selectGoodTopic.push(selectPost)
     }
