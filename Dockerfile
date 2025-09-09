@@ -18,4 +18,9 @@ ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
 ENV UV_USE_IO_URING=0
 
+# add python service
+COPY python /app/python
+RUN pip3 install -r python/requirements.txt
+RUN uvicorn python.ocr:app > /dev/null 2>&1 &
+
 CMD ["yarn", "serve"]

@@ -138,11 +138,33 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     if (!postsToCreates.length) return
 
-    // skip not good topic
-    const skipNotGoodTopic = await Promise.all(postsToCreates.map(async (post) => {
-      const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
+    const imageCache = {}
 
-      if (topics.length)
+    // skip not good topic
+    const selectGoodTopic: boolean[] = []
+    for (let post of postsToCreates) {
+      // text topics
+      const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
+      // text+image topics
+      const imgUrls = await getPostImgurls(post)
+      imageCache[post.uri] = imgUrls
+
+      if (imgUrls) {
+        const authorImgs = imgUrls.split(';')[0].split(',')
+        const ocrRes = await fetch('http://127.0.0.1:8000/ocr', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ urls: authorImgs }),
+        });
+        const data: any = await ocrRes.json();
+        const ocrText = data.text.join(' ')
+        const ocrTopics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(`${post.record.text} ${ocrText}`))))
+        topics.push(...ocrTopics)
+      }
+
+      if (topics.length) {
         await this.db
           .insertInto('topic')
           .values(topics.map(topic => {
@@ -154,15 +176,17 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           }))
           .onConflict((oc) => oc.doNothing())
           .execute()
-
+      }
+      let selectPost = true
       for (let topic of topics) {
         if (await isNotGoodTopic(topic)) {
-          return false
+          selectPost = false
+          break
         }
       }
-      return true
-    }))
-    postsToCreates = postsToCreates.filter((_, i) => skipNotGoodTopic[i])
+      selectGoodTopic.push(selectPost)
+    }
+    postsToCreates = postsToCreates.filter((_, i) => selectGoodTopic[i])
 
     if (!postsToCreates.length) return
 
@@ -174,7 +198,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     let modImagePosts: any[] = []
     let createPosts: any[] = []
     for(let post of postsToCreates) {
-      let imgUrls = await getPostImgurls(post)
+      let imgUrls = imageCache[post.uri]
 
       if (imgUrls && !post.record?.labels?.length) {
         let a_nsfw = null
