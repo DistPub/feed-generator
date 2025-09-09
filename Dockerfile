@@ -41,4 +41,4 @@ ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
 ENV UV_USE_IO_URING=0
 
-CMD sh -c "uvicorn python.ocr:app > /dev/null 2>&1 & yarn serve"
+CMD sh -c "uvicorn python.ocr:app > /tmp/ocr.log 2>&1 & yarn serve"
