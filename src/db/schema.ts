@@ -7,6 +7,7 @@ export type DatabaseSchema = {
 }
 
 export type Topic = {
+  id: number
   topic: string
   uri: string
   time: number

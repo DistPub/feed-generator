@@ -10,7 +10,7 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
         .where('topic', 'in', input.body.topics)
         .execute();
-    const uris = rows.map(r => r.uri);
+    const uris = [...new Set(rows.map(r => r.uri))];
 
     if (uris.length) {
       await ctx.db
@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         .select(['topic'])
         .select(eb => [
             eb.fn.max('time').as('updatedAt'),
-            eb.fn.count('uri').as('count'),
+            eb.fn.count('id').as('count'),
         ])
 
     if (params.uri) {
@@ -43,7 +43,7 @@ export default function (server: Server, ctx: AppContext) {
     } else {
       query = query
         .groupBy('topic')
-        .having(eb => eb.fn.count('uri'), '>', params.min)
+        .having(eb => eb.fn.count('id'), '>', params.min)
     }
 
     const topics = await query

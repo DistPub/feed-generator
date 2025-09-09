@@ -1,4 +1,5 @@
-import { Kysely, Migration, MigrationProvider } from 'kysely'
+// @ts-nocheck
+import { Kysely, Migration, MigrationProvider, sql } from 'kysely'
 
 const migrations: Record<string, Migration> = {}
 
@@ -93,8 +94,48 @@ migrations['005'] = {
       .execute();
   },
   async down(db: Kysely<unknown>) {
-    await db.schema.dropIndex('idx_topic_topic').execute()
-    await db.schema.dropIndex('idx_topic_topic_time').execute()
     await db.schema.dropTable('topic').execute()
+  },
+}
+migrations['006'] = {
+  async up(db: Kysely<unknown>) {
+    await sql`PRAGMA foreign_keys=OFF`.execute(db);
+    await db.schema
+      .createTable('tmp_topic')
+      .addColumn('id', 'integer', col => col.primaryKey().autoIncrement())
+      .addColumn('uri', 'varchar', (col) => col.notNull())
+      .addColumn('topic', 'varchar', (col) => col.notNull())
+      .addColumn('time', 'integer', (col) => col.notNull())
+      .execute()
+
+    await db
+      .insertInto('tmp_topic')
+      .columns(['uri', 'topic', 'time'])
+      .expression(
+        db.selectFrom('topic').select(['uri', 'topic', 'time'])
+      )
+      .execute();
+
+    await db.schema.dropTable('topic').execute();
+    await db.schema.alterTable('tmp_topic').renameTo('topic').execute();
+
+    await db.schema
+      .createIndex('idx_topic_topic_time')
+      .on('topic')
+      .columns(['topic', 'time desc'])   // 复合 + 倒序
+      .execute();
+    await db.schema
+      .createIndex('idx_topic_topic')
+      .on('topic')
+      .column('topic')
+      .execute();
+    await db.schema
+      .createIndex('idx_topic_uri')
+      .on('topic')
+      .column('uri')
+      .execute();
+    await sql`PRAGMA foreign_keys=ON`.execute(db);
+  },
+  async down(db: Kysely<unknown>) {
   },
 }
