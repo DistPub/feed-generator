@@ -1,3 +1,5 @@
+import { Generated } from 'kysely';
+
 export type DatabaseSchema = {
   post: Post
   sub_state: SubState
@@ -7,7 +9,7 @@ export type DatabaseSchema = {
 }
 
 export type Topic = {
-  id: number
+  id: Generated<number>
   topic: string
   uri: string
   time: number
