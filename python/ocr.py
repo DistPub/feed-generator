@@ -20,13 +20,17 @@ class Item(BaseModel):
 def read_root(target: Item):
     text = []
     for url in target.urls:
+        image_data = None
         try:
-            res= requests.get(url)
-            image_data = io.BytesIO(res.content)
-            img = Image.open(image_data)
-            result = reader.readtext(img, detail = 0)
-            text.append(' '.join(result))
+            with requests.get(url, stream=True) as res:
+                res.raise_for_status()
+                image_data = io.BytesIO(res.content)
+                with Image.open(image_data) as img:
+                    result = reader.readtext(img, detail = 0)
+                    text.append(' '.join(result))
         except Exception as e:
             print(f'Error processing {url}: {e}')
-            continue
+        finally:
+            if image_data is not None:
+                image_data.close()
     return {"text": text}
