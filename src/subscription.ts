@@ -151,17 +151,21 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
       if (imgUrls) {
         const authorImgs = imgUrls.split(';')[0].split(',')
-        const ocrRes = await fetch('http://127.0.0.1:8000/ocr', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ urls: authorImgs }),
-        });
-        const data: any = await ocrRes.json();
-        const ocrText = data.text.join(' ')
-        const ocrTopics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(`${post.record.text} ${ocrText}`))))
-        topics.push(...ocrTopics)
+        try {
+          const ocrRes = await fetch('http://127.0.0.1:8000/ocr', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ urls: authorImgs }),
+          });
+          const data: any = await ocrRes.json();
+          const ocrText = data.text.join(' ')
+          const ocrTopics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(`${post.record.text} ${ocrText}`))))
+          topics.push(...ocrTopics)
+        } catch (e) {
+          console.error('getocrTopics failed:', e);
+        }
       }
 
       if (topics.length) {
