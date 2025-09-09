@@ -3,7 +3,7 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { CreateOp, FirehoseSubscriptionBase, getOpsByType, OperationsByType } from './util/subscription'
-import { isBot, isNSFW, isNotChineseWebsite, isNotGoodTopic, isNotGoodUser, signLabel } from './bw'
+import { authorPostNotGoodTopic, getBW, isBot, isNSFW, isNotChineseWebsite, isNotGoodUser, putBW, removeFromDB, signLabel } from './bw'
 import { Record } from './lexicon/types/app/bsky/feed/post';
 import { getDid, getPostByUri, seq } from './config';
 import { delayToSync, getDB } from './dbpool';
@@ -178,11 +178,12 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           .execute()
       }
       let selectPost = true
-      for (let topic of topics) {
-        if (await isNotGoodTopic(topic)) {
-          selectPost = false
-          break
-        }
+      if (await authorPostNotGoodTopic(post.author, topics)) {
+        selectPost = false
+        let ret = await getBW(post.author)
+        ret.bot = 1
+        await putBW([ret])
+        await removeFromDB(post.author)
       }
       selectGoodTopic.push(selectPost)
     }

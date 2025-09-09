@@ -90,7 +90,7 @@ export async function isBot(did: string) {
     return await computeBot(did, ret)
 }
 
-async function removeFromDB(did: string) {
+export async function removeFromDB(did: string) {
   const db = storage.main as Database
   await db.deleteFrom('post')
       .where('post.author', '=', did)
@@ -135,6 +135,15 @@ export async function computeBot(did: string, ret: any = undefined) {
     ret.bot = t < 1 ? 1 : 0
 
     if (ret.bot) {
+      await putBW([ret])
+      await removeFromDB(did)
+      return ret.bot
+    }
+
+    // check topic
+    const post_not_good_topic = await authorPostNotGoodTopic(did)
+    if (post_not_good_topic) {
+      ret.bot = 1
       await putBW([ret])
       await removeFromDB(did)
       return ret.bot
@@ -246,6 +255,24 @@ export async function isNotChineseWebsite(hostname: string) {
     .where('not_chinese_website.hostname', '=', hostname)
     .execute()
     return rows.length
+}
+
+export async function authorPostNotGoodTopic(author: string, topics: string[] = []) {
+  const db = storage.main as Database
+  if (topics.length === 0) {
+    const rows = await db.selectFrom('topic')
+      .select('topic')
+      .where('uri', 'like', `at://${author}/%`)
+      .groupBy('topic')
+      .execute()
+    topics.push(...rows.map(r => r.topic))
+  }
+  for (let topic of topics) {
+    if (await isNotGoodTopic(topic)) {
+      return true
+    }
+  }
+  return false
 }
 
 export async function isNotGoodTopic(topic: string) {
