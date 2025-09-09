@@ -2,7 +2,7 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        curl ca-certificates gnupg dumb-init make gcc g++ python3 python3-dev python3-pip python3-venv
+        curl ca-certificates gnupg dumb-init make gcc g++ python3 python3-dev python3-pip python3-venv supervisor
 
 # 安装 Node.js 20（NodeSource 官方方式）
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -28,7 +28,9 @@ WORKDIR /app
 COPY python/requirements.txt package.json yarn.lock /app
 RUN pip3 install -r requirements.txt
 RUN yarn install
+RUN python -c "import easyocr; easyocr.Reader(['en','ch_sim'], gpu=False)"
 
+COPY supervisord.conf /app
 COPY python /app/python
 COPY lexicons /app/lexicons
 COPY src /app/src
@@ -41,4 +43,4 @@ ENV NODE_ENV=production
 # potential perf issues w/ io_uring on this version of node
 ENV UV_USE_IO_URING=0
 
-CMD sh -c "uvicorn python.ocr:app > /tmp/ocr.log 2>&1 & yarn serve"
+CMD ["supervisord", "-c", "/app/supervisord.conf"]

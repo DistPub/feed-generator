@@ -1,9 +1,8 @@
 async function main1() {
   try {
     const urls = [
-        'https://go.smitechow.com/+x/cdn.bsky.app/img/feed_thumbnail/plain/did:plc:mxabcpwk5hmlblzrzp4u7x7z/bafkreidrnmxji64lw2d7m7ukrhc4ifx7t6whpscectaxnujsbi6qlfayxu@jpeg',
-        'https://go.smitechow.com/+c+x/https://video.cdn.bsky.app/hls/did:plc:7u6iswx7tidj53nvdljnrfrt/bafkreihib4a22j2iei2jlfqasa54cbir37mtsdeeaqolxsjsrcd2oepu3i/thumbnail.jpg',
-        'https://go.smitechow.com/+x/cdn.bsky.app/img/feed_thumbnail/plain/did:plc:clk7274ezih5yuc7e3474rep/bafkreideuqdhql5dvzfutx3kq3p4pidmawt7s5muog2tzlm7paiuhyj3hu@jpeg'
+        'https://go.smitechow.com/+x/cdn.bsky.app/img/feed_thumbnail/plain/did:plc:gfd2yz6v44s5fv4mniyqnutu/bafkreidwjrk6j5nfwbbmv44552sa5nnlrgz5725rtxsiew2nmxjuuspusy@jpeg',
+        'https://go.smitechow.com/+x/cdn.bsky.app/img/feed_thumbnail/plain/did:plc:gfd2yz6v44s5fv4mniyqnutu/bafkreihhs6wbw5bzdlvybgzssi6ghqqki7w6ylvxnkgyayakof2ehn4yui@jpeg'
     ];
     const res = await fetch('http://127.0.0.1:8000/ocr', {
       method: 'POST',
