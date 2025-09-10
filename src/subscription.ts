@@ -8,6 +8,7 @@ import { Record } from './lexicon/types/app/bsky/feed/post';
 import { getDid, getPostByUri, seq } from './config';
 import { delayToSync, getDB } from './dbpool';
 import { tokenize, removeUrlsAndMentions, zhTokenSeparator, getTopics } from './topic';
+import { Database } from './db';
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
@@ -66,7 +67,7 @@ export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolea
   return imgUrls
 }
 
-export async function computeTopic(post: CreateOp<Record>, imgUrls: string | null) {
+export async function computeTopic(post: CreateOp<Record>, imgUrls: string | null, db: Database) {
   // text topics
   const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
   // text+image topics
@@ -90,7 +91,7 @@ export async function computeTopic(post: CreateOp<Record>, imgUrls: string | nul
   }
   
   if (topics.length) {
-    await this.db
+    await db
       .insertInto('topic')
       .values(topics.map(topic => {
         return {
@@ -184,7 +185,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     for (let post of postsToCreates) {
       const imgUrls = await getPostImgurls(post)
       imageCache[post.uri] = imgUrls
-      const topics = await computeTopic(post, imgUrls)
+      const topics = await computeTopic(post, imgUrls, this.db)
       
       let selectPost = true
       if (topics.length) {

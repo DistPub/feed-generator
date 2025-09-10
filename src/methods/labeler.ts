@@ -108,7 +108,7 @@ export default function (server: Server, ctx: AppContext) {
         let post = await getPostByUri(uri)
         if (post) {
           let imgUrls = await getPostImgurls(post, false, false)
-          await computeTopic(post, imgUrls)
+          await computeTopic(post, imgUrls, ctx.db)
         }
       }
     }
