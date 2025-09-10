@@ -1,5 +1,5 @@
 import { formatDate, getDB, getOffsetDate, storage } from './dbpool'
-import { seq } from './config'
+import { seq, urlPattern } from './config'
 import { Database } from './db'
 
 export async function getBW(did: string) {
@@ -165,6 +165,11 @@ export async function computeBot(did: string, ret: any = undefined) {
           counter += 1
           continue
         }
+      }
+
+      if (urlPattern.test(feed.post.record.text)) {
+        counter += 1
+        continue
       }
     }
 

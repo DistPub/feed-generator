@@ -1,6 +1,7 @@
 import { Jieba } from '@node-rs/jieba';
 import { dict } from '@node-rs/jieba/dict'
 import { removeStopwords, eng, zho } from 'stopword'
+import { urlPattern } from './config';
 
 const jieba = Jieba.withDict(dict)
 
@@ -39,8 +40,6 @@ export function tokenize(text: string): string[] {
  * @returns 移除后的文本
  */
 export function removeUrlsAndMentions(text: string): string {
-    // 匹配网址（http/https/ftp/file/裸域名等）
-    const urlPattern = /\b((https?:\/\/|ftp:\/\/|file:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s]*)?)/gi;
     // 匹配@提及（@后面是域名）
     const mentionPattern = /@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/g;
     const ret = text
