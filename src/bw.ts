@@ -104,6 +104,16 @@ export async function removeFromDB(did: string) {
 }
 
 export async function computeBot(did: string, ret: any = undefined) {
+    if (ret === undefined) ret = await getBW(did)
+    // check topic
+    const post_not_good_topic = await authorPostNotGoodTopic(did)
+    if (post_not_good_topic) {
+      ret.bot = 1
+      await putBW([ret])
+      await removeFromDB(did)
+      return ret.bot
+    }
+
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getAuthorFeed?actor=${did}&filter=posts_no_replies&includePins=false&limit=30`
     let response = await fetch(url)
     let data = await response.json() as any
@@ -131,19 +141,9 @@ export async function computeBot(did: string, ret: any = undefined) {
       } while (feeds.length >= 13)
     }
 
-    if (ret === undefined) ret = await getBW(did)
     ret.bot = t < 1 ? 1 : 0
 
     if (ret.bot) {
-      await putBW([ret])
-      await removeFromDB(did)
-      return ret.bot
-    }
-
-    // check topic
-    const post_not_good_topic = await authorPostNotGoodTopic(did)
-    if (post_not_good_topic) {
-      ret.bot = 1
       await putBW([ret])
       await removeFromDB(did)
       return ret.bot
