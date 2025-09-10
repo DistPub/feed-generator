@@ -1,8 +1,7 @@
 async function main1() {
   try {
     const urls = [
-        'https://go.smitechow.com/+x/cdn.bsky.app/img/feed_thumbnail/plain/did:plc:gfd2yz6v44s5fv4mniyqnutu/bafkreidwjrk6j5nfwbbmv44552sa5nnlrgz5725rtxsiew2nmxjuuspusy@jpeg',
-        'https://go.smitechow.com/+x/cdn.bsky.app/img/feed_thumbnail/plain/did:plc:gfd2yz6v44s5fv4mniyqnutu/bafkreihhs6wbw5bzdlvybgzssi6ghqqki7w6ylvxnkgyayakof2ehn4yui@jpeg'
+        'https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:qylgajeqnvrxlwl42dxdwczu/bafkreibrzu4hpyuwfankjfcdbj7j5ktn77gq474ui3m74njmij624z27zi',
     ];
     const res = await fetch('http://127.0.0.1:8000/ocr', {
       method: 'POST',

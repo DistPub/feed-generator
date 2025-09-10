@@ -18,7 +18,10 @@ def read_root(target: Item):
     for url in target.urls:
         try:
             result = engine(url)
-            text.append(' '.join(list(result.txts)))
+            if result.txts is None:
+                text.append('')
+            else:
+                text.append(' '.join(list(result.txts)))
         except Exception as e:
             print(f'Error processing {url}: {e}')
     return {"text": text}
