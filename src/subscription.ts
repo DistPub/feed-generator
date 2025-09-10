@@ -82,9 +82,11 @@ export async function computeTopic(post: CreateOp<Record>, imgUrls: string | nul
         body: JSON.stringify({ urls: authorImgs }),
       });
       const data: any = await ocrRes.json();
-      const ocrText = data.text.join(' ')
-      const ocrTopics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(`${post.record.text} ${ocrText}`))))
-      topics.push(...ocrTopics)
+      const ocrText = data.text.join(' ').trim()
+      if (ocrText.length) {
+        const ocrTopics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(`${post.record.text} ${ocrText}`))))
+        topics.push(...ocrTopics)
+      }
     } catch (e) {
       console.error('getocrTopics failed:', e);
     }
