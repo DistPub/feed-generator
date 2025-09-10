@@ -1,8 +1,4 @@
---extra-index-url https://download.pytorch.org/whl/cpu
-pillow==11.0.0
-torch==2.2.2
-numpy<2
-requests==2.32.3
-easyocr==1.7.2
+rapidocr==3.4.0
+onnxruntime==1.22.1
 fastapi==0.116.1
 uvicorn==0.35.0

@@ -2,7 +2,7 @@ FROM debian:bookworm-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        curl ca-certificates gnupg dumb-init make gcc g++ python3 python3-dev python3-pip python3-venv supervisor
+        curl ca-certificates gnupg dumb-init make gcc g++ python3 python3-dev python3-pip python3-venv supervisor libgl1 libglx-mesa0 libglib2.0-0
 
 # 安装 Node.js 20（NodeSource 官方方式）
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -28,7 +28,7 @@ WORKDIR /app
 COPY python/requirements.txt package.json yarn.lock /app
 RUN pip3 install -r requirements.txt
 RUN yarn install
-RUN python -c "import easyocr; easyocr.Reader(['en','ch_sim'], gpu=False)"
+RUN python -c "from rapidocr import RapidOCR; engine = RapidOCR()"
 
 COPY supervisord.conf /app
 COPY python /app/python
