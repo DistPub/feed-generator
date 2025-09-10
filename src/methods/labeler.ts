@@ -2,9 +2,7 @@ import { Server } from '../lexicon'
 import { AppContext } from '../config'
 import { getBW, isNotGoodUser, computeBot, isNSFW, signLabel } from '../bw'
 import { validateAuth } from '../auth'
-import { CreateOp } from '../util/subscription'
-import { Record } from '../lexicon/types/app/bsky/feed/post'
-import { getPostImgurls } from '../subscription'
+import { computeTopic, getPostImgurls } from '../subscription'
 import { Outbox } from './outbox'
 import { seq, getPostByUri, getDid } from '../config'
 import { syncDBFile } from '../dbpool'
@@ -101,6 +99,18 @@ export default function (server: Server, ctx: AppContext) {
 
     else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:restart') {
       commandRestart()
+    }
+    else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:topic') {
+      if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
+        console.log(`compute topic should from a app.bsky.feed.post record`)
+      } else {
+        console.log(`compute topic uri: ${uri} cid: ${cid}`)
+        let post = await getPostByUri(uri)
+        if (post) {
+          let imgUrls = await getPostImgurls(post, false, false)
+          await computeTopic(post, imgUrls)
+        }
+      }
     }
 
     else if (reasonType === 'com.atproto.moderation.defs#reasonSpam') {

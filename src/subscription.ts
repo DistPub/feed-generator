@@ -66,6 +66,45 @@ export async function getPostImgurls(post: CreateOp<Record>, comeFromSub: boolea
   return imgUrls
 }
 
+export async function computeTopic(post: CreateOp<Record>, imgUrls: string | null) {
+  // text topics
+  const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
+  // text+image topics
+  if (imgUrls) {
+    const authorImgs = imgUrls.split(';')[0].split(',')
+    try {
+      const ocrRes = await fetch('http://127.0.0.1:8000/ocr', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ urls: authorImgs }),
+      });
+      const data: any = await ocrRes.json();
+      const ocrText = data.text.join(' ')
+      const ocrTopics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(`${post.record.text} ${ocrText}`))))
+      topics.push(...ocrTopics)
+    } catch (e) {
+      console.error('getocrTopics failed:', e);
+    }
+  }
+  
+  if (topics.length) {
+    await this.db
+      .insertInto('topic')
+      .values(topics.map(topic => {
+        return {
+          topic,
+          uri: post.uri,
+          time: Date.now()
+        }
+      }))
+      .onConflict((oc) => oc.doNothing())
+      .execute()
+  }
+  return topics
+}
+
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handlePostToDelete(ops: OperationsByType) {
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
@@ -143,44 +182,12 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     // skip not good topic
     const selectGoodTopic: boolean[] = []
     for (let post of postsToCreates) {
-      // text topics
-      const topics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(post.record.text))))
-      // text+image topics
       const imgUrls = await getPostImgurls(post)
       imageCache[post.uri] = imgUrls
-
-      if (imgUrls) {
-        const authorImgs = imgUrls.split(';')[0].split(',')
-        try {
-          const ocrRes = await fetch('http://127.0.0.1:8000/ocr', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ urls: authorImgs }),
-          });
-          const data: any = await ocrRes.json();
-          const ocrText = data.text.join(' ')
-          const ocrTopics = getTopics(zhTokenSeparator(tokenize(removeUrlsAndMentions(`${post.record.text} ${ocrText}`))))
-          topics.push(...ocrTopics)
-        } catch (e) {
-          console.error('getocrTopics failed:', e);
-        }
-      }
+      const topics = await computeTopic(post, imgUrls)
       
       let selectPost = true
       if (topics.length) {
-        await this.db
-          .insertInto('topic')
-          .values(topics.map(topic => {
-            return {
-              topic,
-              uri: post.uri,
-              time: Date.now()
-            }
-          }))
-          .onConflict((oc) => oc.doNothing())
-          .execute()
         if (await authorPostNotGoodTopic(post.author, topics)) {
           selectPost = false
           let ret = await getBW(post.author)
