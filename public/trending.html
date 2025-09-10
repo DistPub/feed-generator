@@ -9,7 +9,7 @@
             width: 80%;
             margin: 20px auto;
         }
-        #copy-btn {
+        #copy-btn, #search-form {
             display: block;
             margin: 10px auto;
             padding: 8px 16px;
@@ -32,6 +32,13 @@
 </head>
 <body>
     <div style="width: 80%; margin: 20px auto;">
+        <form id="search-form" style="margin-bottom: 16px; text-align: center;">
+            <input type="text" id="search-input" name="search" placeholder="搜索话题" style="padding:6px; font-size:1em;" value="">
+            <button type="submit" style="padding:6px 14px; font-size:1em;">搜索</button>
+            <input type="text" id="uri-input" name="uri" placeholder="输入URI" style="padding:6px; font-size:1em; margin-left:10px;" value="">
+            <button type="button" id="uri-btn" style="padding:6px 14px; font-size:1em;">查看</button>
+            <button type="button" id="clear-btn" style="padding:6px 14px; font-size:1em; margin-left:10px;">清空</button>
+        </form>
         <table id="trending-table">
             <caption>热门话题趋势</caption>
             <thead>
@@ -49,6 +56,47 @@
         </table>
         <button id="copy-btn" disabled style="margin-bottom:10px;">复制选中话题</button>
     </div>
+    <script>
+        // 填充搜索框和URI框初始值
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(location.search);
+            document.getElementById('search-input').value = params.get('search') || '';
+            document.getElementById('uri-input').value = params.get('uri') || '';
+        });
+        // 搜索表单逻辑
+        document.getElementById('search-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const search = document.getElementById('search-input').value.trim();
+            const uri = document.getElementById('uri-input').value.trim();
+            const params = new URLSearchParams(location.search);
+            if (search) {
+                params.set('search', search);
+            } else {
+                params.delete('search');
+            }
+            if (uri) {
+                params.set('uri', uri);
+            } else {
+                params.delete('uri');
+            }
+            location.search = params.toString();
+        });
+        // URI按钮逻辑
+        document.getElementById('uri-btn').addEventListener('click', function() {
+            const uri = document.getElementById('uri-input').value.trim();
+            const params = new URLSearchParams(location.search);
+            if (uri) {
+                params.set('uri', uri);
+            } else {
+                params.delete('uri');
+            }
+            location.search = params.toString();
+        });
+        // 清空按钮逻辑
+        document.getElementById('clear-btn').addEventListener('click', function() {
+            location.search = '';
+        });
+    </script>
     <script>
         // 复制按钮逻辑
         document.addEventListener('DOMContentLoaded', function() {
