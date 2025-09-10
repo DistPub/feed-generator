@@ -9,6 +9,12 @@
             width: 80%;
             margin: 20px auto;
         }
+        #copy-btn {
+            display: block;
+            margin: 10px auto;
+            padding: 8px 16px;
+            font-size: 1em;
+        }
         th, td {
             border: 1px solid #ccc;
             padding: 8px 12px;
@@ -25,20 +31,42 @@
     </style>
 </head>
 <body>
-    <table id="trending-table">
-        <caption>热门话题趋势</caption>
-        <thead>
-            <tr>
-                <th>话题</th>
-                <th>热度</th>
-                <th>更新时间</th>
-                <th>是否屏蔽</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr><td colspan="4">加载中...</td></tr>
-        </tbody>
-    </table>
+    <div style="width: 80%; margin: 20px auto;">
+        <table id="trending-table">
+            <caption>热门话题趋势</caption>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>话题</th>
+                    <th>热度</th>
+                    <th>更新时间</th>
+                    <th>是否屏蔽</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="5">加载中...</td></tr>
+            </tbody>
+        </table>
+        <button id="copy-btn" disabled style="margin-bottom:10px;">复制选中话题</button>
+    </div>
+    <script>
+        // 复制按钮逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyBtn = document.getElementById('copy-btn');
+            const table = document.getElementById('trending-table');
+            copyBtn.addEventListener('click', function() {
+                const checked = table.querySelectorAll('tbody input[type="checkbox"]:checked');
+                const topics = Array.from(checked).map(cb => cb.dataset.topic);
+                if (topics.length) {
+                    navigator.clipboard.writeText(topics.join('\n'));
+                }
+            });
+            table.addEventListener('change', function() {
+                const checked = table.querySelectorAll('tbody input[type="checkbox"]:checked');
+                copyBtn.disabled = checked.length === 0;
+            });
+        });
+    </script>
     <script>
         async function fetchTrendingTopics() {
             const tableBody = document.querySelector('#trending-table tbody');
@@ -48,11 +76,14 @@
                 const data = await response.json();
                 // 假设返回数据结构为 { topics: [{ topic, score, updatedAt }, ...] }
                 if (!data.topics || !Array.isArray(data.topics) || data.topics.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="4">暂无数据</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="5">暂无数据</td></tr>';
                     return;
                 }
                 tableBody.innerHTML = data.topics.map(item => `
-                    <tr>
+                    <tr${item.notGood ? ' style="background:#ffeaea;"' : ''}>
+                        <td>
+                            <input type="checkbox" data-topic="${item.topic}">
+                        </td>
                         <td>${item.topic}</td>
                         <td>${item.count}</td>
                         <td>${item.updatedAt ? new Date(item.updatedAt).toLocaleString() : ''}</td>
@@ -60,7 +91,7 @@
                     </tr>
                 `).join('');
             } catch (e) {
-                tableBody.innerHTML = `<tr><td colspan="4">加载失败: ${e.message}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="5">加载失败: ${e.message}</td></tr>`;
             }
         }
         fetchTrendingTopics();
