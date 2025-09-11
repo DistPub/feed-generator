@@ -2,7 +2,9 @@ import { Jieba } from '@node-rs/jieba';
 import { dict } from '@node-rs/jieba/dict'
 import { removeStopwords, eng, zho } from 'stopword'
 import { urlPattern } from './config';
+import * as OpenCC from 'opencc-js';
 
+const converter = OpenCC.Converter({ from: 'tw', to: 'cn' });
 const jieba = Jieba.withDict(dict)
 
 export async function updateJieBaDict() {
@@ -48,7 +50,7 @@ export function removeUrlsAndMentions(text: string): string {
         .replace(/\s{2,}/g, ' ')
         .trim()
         .toLowerCase();
-    return ret
+    return converter(ret)
 }
 
 /**

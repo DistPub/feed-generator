@@ -1,6 +1,6 @@
 import { Server } from '../lexicon'
 import { AppContext, getDid } from '../config'
-import { addNotGoodTopics, computeBot, getBW, isNotGoodTopic, putBW, removeFromDB } from '../bw';
+import { addNotGoodTopics, getBW, isNotGoodTopic, putBW, removeFromDB } from '../bw';
 
 export default function (server: Server, ctx: AppContext) {
   server.com.hukoubook.fg.removeTopicPosts(async ({ input }) => {

@@ -1689,6 +1689,11 @@ one-webcrypto@^1.0.3:
   resolved "https://registry.yarnpkg.com/one-webcrypto/-/one-webcrypto-1.0.3.tgz#f951243cde29b79b6745ad14966fc598a609997c"
   integrity sha512-fu9ywBVBPx0gS9K0etIROTiCkvI5S1TDjFsYFb3rC1ewFxeOqsbzq7aIMBHsYfrTHBcGXJaONXXjTl8B01cW1Q==
 
+opencc-js@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/opencc-js/-/opencc-js-1.0.5.tgz#4754a9407590c5d581c9b4788acd43e8627dd464"
+  integrity sha512-LD+1SoNnZdlRwtYTjnQdFrSVCAaYpuDqL5CkmOaHOkKoKh7mFxUicLTRVNLU5C+Jmi1vXQ3QL4jWdgSaa4sKjg==
+
 os-tmpdir@~1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
@@ -2141,6 +2146,11 @@ thread-stream@^2.6.0:
   integrity sha512-qQiRWsU/wvNolI6tbbCKd9iKaTnCXsTwVxhhKM6nctPdujTyztjlbUkUTUymidWcMnZ5pWR0ej4a0tjsW021vw==
   dependencies:
     real-require "^0.2.0"
+
+tinyld@^1.3.4:
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/tinyld/-/tinyld-1.3.4.tgz#87ea3ff04ee7dc70b7f8c009875c367f3158fe3f"
+  integrity sha512-u26CNoaInA4XpDU+8s/6Cq8xHc2T5M4fXB3ICfXPokUQoLzmPgSZU02TAkFwFMJCWTjk53gtkS8pETTreZwCqw==
 
 tlds@^1.234.0:
   version "1.255.0"

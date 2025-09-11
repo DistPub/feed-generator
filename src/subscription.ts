@@ -9,6 +9,7 @@ import { getDid, getPostByUri, seq } from './config';
 import { delayToSync, getDB } from './dbpool';
 import { tokenize, removeUrlsAndMentions, zhTokenSeparator, getTopics } from './topic';
 import { Database } from './db';
+import { detect } from 'tinyld'
 
 const regex = /^(?=.*\p{Script=Han})(?!.*[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])[\s\S]*$/us;
 
@@ -133,7 +134,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       })
       .filter((create) => {
         // check content first
-        const matched = regex.test(create.record.text)
+        let matched = regex.test(create.record.text)
         if (matched) {
           return true
         }
@@ -144,7 +145,19 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         }
 
         let langs = create.record.langs as Array<string>
-        return langs.includes('zh') && !langs.includes('ko') && !langs.includes('ja')
+        matched = langs.includes('zh') && !langs.includes('ko') && !langs.includes('ja')
+
+        if (!matched) {
+          return false
+        }
+
+        // detect content, only accept english
+        const lang = detect(create.record.text)
+        if (lang === 'en') {
+          return true
+        }
+
+        return false
       })
 
     if (!postsToCreate.length) return
