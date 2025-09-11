@@ -1,6 +1,6 @@
 import { Server } from '../lexicon'
-import { AppContext } from '../config'
-import { addNotGoodTopics, isNotGoodTopic } from '../bw';
+import { AppContext, getDid } from '../config'
+import { addNotGoodTopics, computeBot, isNotGoodTopic } from '../bw';
 
 export default function (server: Server, ctx: AppContext) {
   server.com.hukoubook.fg.removeTopicPosts(async ({ input }) => {
@@ -10,13 +10,10 @@ export default function (server: Server, ctx: AppContext) {
         .selectAll()
         .where('topic', 'in', input.body.topics)
         .execute();
-    const uris = [...new Set(rows.map(r => r.uri))];
+    const dids = [...new Set(rows.map(r => r.uri).map(uri => getDid(uri)))];
 
-    if (uris.length) {
-      await ctx.db
-        .deleteFrom('post')
-        .where('uri', 'in', uris)
-        .execute();
+    for (let did of dids) {
+      await computeBot(did)
     }
     return {
       encoding: 'application/json',
