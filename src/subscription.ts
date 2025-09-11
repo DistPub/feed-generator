@@ -151,9 +151,9 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           return false
         }
 
-        // detect content, only accept english
+        // detect content, only accept english or unknown
         const lang = detect(create.record.text)
-        if (lang === 'en') {
+        if (lang === 'en' || lang === '') {
           return true
         }
 
