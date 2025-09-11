@@ -1,6 +1,6 @@
 import { Server } from '../lexicon'
 import { AppContext, getDid } from '../config'
-import { addNotGoodTopics, computeBot, isNotGoodTopic } from '../bw';
+import { addNotGoodTopics, computeBot, getBW, isNotGoodTopic, putBW, removeFromDB } from '../bw';
 
 export default function (server: Server, ctx: AppContext) {
   server.com.hukoubook.fg.removeTopicPosts(async ({ input }) => {
@@ -13,7 +13,10 @@ export default function (server: Server, ctx: AppContext) {
     const dids = [...new Set(rows.map(r => r.uri).map(uri => getDid(uri)))];
 
     for (let did of dids) {
-      await computeBot(did)
+      const ret = await getBW(did)
+      ret.bot = 1
+      await putBW([ret])
+      await removeFromDB(did)
     }
     return {
       encoding: 'application/json',
