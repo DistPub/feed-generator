@@ -97,6 +97,12 @@ export default function (server: Server, ctx: AppContext) {
       console.log(`report bot did: ${target} ret: ${ret}`)
     }
 
+    else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonViolation') {
+      await ctx.db
+        .deleteFrom('post')
+        .where('post.uri', '=', uri)
+        .execute()
+    }
     else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:restart') {
       commandRestart()
     }
