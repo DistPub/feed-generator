@@ -75,7 +75,7 @@ export default function (server: Server, ctx: AppContext) {
     
     let today = new Date()
     const d7UserCnts: number[] = []
-    for (let offset of [0, 1, 2, 3, 4, 5, 6]) {
+    for (let offset of [0, 1, 2, 3, 4, 5, 6].reverse()) {
         const db = await getDB(formatDate(getOffsetDate(today, offset)))
         const cnt = await db
           .selectFrom('black_white')

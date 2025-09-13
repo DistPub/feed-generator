@@ -32,6 +32,10 @@
 </head>
 <body>
     <div style="width: 80%; margin: 20px auto;">
+        <!-- 活跃用户折线图容器 -->
+        <div style="margin-bottom: 24px;">
+            <canvas id="active-users-chart" height="80"></canvas>
+        </div>
         <form id="search-form" style="margin-bottom: 16px; text-align: center;">
             <input type="text" id="search-input" name="search" placeholder="搜索话题" style="padding:6px; font-size:1em;" value="">
             <button type="submit" style="padding:6px 14px; font-size:1em;">搜索</button>
@@ -40,7 +44,7 @@
             <button type="button" id="clear-btn" style="padding:6px 14px; font-size:1em; margin-left:10px;">清空</button>
         </form>
         <table id="trending-table">
-            <caption>热门话题趋势</caption>
+            <caption id="table-caption">热门话题趋势</caption>
             <thead>
                 <tr>
                     <th></th>
@@ -56,6 +60,8 @@
         </table>
         <button id="copy-btn" disabled style="margin-bottom:10px;">复制选中话题</button>
     </div>
+    <!-- Chart.js CDN -->
+    <script src="https://go.smitechow.com/cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // 填充搜索框和URI框初始值
         document.addEventListener('DOMContentLoaded', function() {
@@ -116,13 +122,69 @@
         });
     </script>
     <script>
+        let chartInstance = null;
         async function fetchTrendingTopics() {
             const tableBody = document.querySelector('#trending-table tbody');
+            const caption = document.getElementById('table-caption');
             try {
                 const response = await fetch(`/xrpc/com.hukoubook.fg.getTopicTrending${location.search}`);
                 if (!response.ok) throw new Error('网络错误');
                 const data = await response.json();
-                // 假设返回数据结构为 { topics: [{ topic, score, updatedAt }, ...] }
+                // 更新标题显示最近12小时活跃用户数和帖子数量
+                if (typeof data.the12hourActiveCount !== 'undefined' && typeof data.the12hourPostCount !== 'undefined') {
+                    caption.textContent = `热门话题趋势（活跃用户数：${data.the12hourActiveCount}，帖子数：${data.the12hourPostCount}）`;
+                } else {
+                    caption.textContent = '热门话题趋势';
+                }
+                // 折线图数据处理
+                if (data.the7dayActiveCount && Array.isArray(data.the7dayActiveCount)) {
+                    const chartData = data.the7dayActiveCount;
+                    // 生成最近七天的日期标签
+                    const today = new Date();
+                    const labels = [];
+                    for (let i = 6; i >= 0; i--) {
+                        const d = new Date(today);
+                        d.setDate(today.getDate() - i);
+                        labels.push(`${d.getMonth()+1}/${d.getDate()}`);
+                    }
+                    // 补全数据（如果长度不足7）
+                    let counts = chartData.slice(-7);
+                    if (counts.length < 7) {
+                        counts = Array(7 - counts.length).fill(0).concat(counts);
+                    }
+                    // 渲染Chart.js折线图
+                    const ctx = document.getElementById('active-users-chart').getContext('2d');
+                    if (chartInstance) chartInstance.destroy();
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '最近七天活跃用户数',
+                                data: counts,
+                                borderColor: '#36a2eb',
+                                backgroundColor: 'rgba(54,162,235,0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#36a2eb'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: true }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { precision:0 }
+                                }
+                            }
+                        }
+                    });
+                }
+                // 表格数据处理
                 if (!data.topics || !Array.isArray(data.topics) || data.topics.length === 0) {
                     tableBody.innerHTML = '<tr><td colspan="5">暂无数据</td></tr>';
                     return;
