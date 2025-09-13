@@ -139,3 +139,14 @@ migrations['006'] = {
   async down(db: Kysely<unknown>) {
   },
 }
+migrations['007'] = {
+  async up(db: Kysely<unknown>) {
+    await db.schema
+      .createIndex('idx_post_author')
+      .on('post')
+      .column('author')
+      .execute();
+  },
+  async down(db: Kysely<unknown>) {
+  },
+}

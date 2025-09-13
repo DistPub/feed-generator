@@ -31,6 +31,16 @@
           "type": "object",
           "required": ["topics"],
           "properties": {
+            "the7dayActiveCount": {
+              "type": "array",
+              "items": { "type": "integer" }
+            },
+            "the12hourActiveCount": {
+              "type": "integer"
+            },
+            "the12hourPostCount": {
+              "type": "integer"
+            },
             "topics": {
               "type": "array",
               "items": { "type": "ref", "ref": "com.hukoubook.fg.defs#topicTrendingView" }
