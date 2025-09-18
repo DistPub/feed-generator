@@ -3,7 +3,7 @@ import { DidResolver } from '@atproto/identity'
 import { Sequencer } from './methods/outbox'
 import * as ui8 from "uint8arrays";
 
-export const urlPattern = /(([a-zA-Z]{2,}:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s]*)?)/g;
+export const urlPattern = /(([a-zA-Z]{2,}:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s]*)?)/;
 export const parsePrivateKey = (privateKey: string): Uint8Array => {
 	let keyBytes: Uint8Array | undefined;
 	try {

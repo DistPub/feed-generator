@@ -43,7 +43,7 @@ export function tokenize(text: string): string[] {
  */
 export function removeUrlsAndMentions(text: string): string {
     // 匹配@提及（@后面是域名）
-    const mentionPattern = /@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/g;
+    const mentionPattern = /@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}/;
     const ret = text
         .replace(urlPattern, '')
         .replace(mentionPattern, '')
