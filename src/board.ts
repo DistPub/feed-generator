@@ -86,3 +86,17 @@ export async function ackUserMsg(did: string, uri: string, db: Database) {
         .execute()
     }
 }
+
+export async function checkLabeler(did: string, labelers: string[], db: Database) {
+    if (labelers.includes(process.env.LABELER_DID as string)) {
+        return
+    }
+    const sended = await db.selectFrom('msg_board').where('did', '=', did).where('msgId', '=', process.env.SYSTEM_MSG_CHECK_LABELER as string).selectAll().executeTakeFirst()
+    if (sended && sended.status === USER_MSG_STATUS_ACK) {
+        await db.updateTable('msg_board').set({
+            status: USER_MSG_STATUS_SEND,
+            updatedAt: (new Date()).toISOString()
+        }).where('id', '=', sended.id)
+        .execute()
+    }
+}
