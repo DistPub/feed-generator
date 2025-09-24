@@ -18,6 +18,12 @@ import { loggerMiddleware } from './logger'
 import { updateJieBaDict } from './topic'
 import { updateSystemBoard } from './board'
 
+export async function syncData(db: Database) {
+  await syncDBFile()
+  await updateJieBaDict()
+  await updateSystemBoard()
+}
+
 export class FeedGenerator {
   public app: express.Application
   public server?: http.Server
@@ -89,25 +95,19 @@ export class FeedGenerator {
         .deleteFrom('topic')
         .where('time', '<=', Date.now() - 12 * 60 * 60000)
         .execute()
-      await syncDBFile()
+      await checkTalkTooMUchPeopleIsBot(this.db)
+      await syncData(this.db)
     }, 60*60000)
     setInterval(async () => {
       await deleteDB()
     }, 24*60*60000)
-    setInterval(async () => {
-      await checkTalkTooMUchPeopleIsBot(this.db)
-      await updateJieBaDict()
-      await updateSystemBoard()
-    }, 60*60000)
   }
 
   async start(): Promise<http.Server> {
     await deleteDB()
     await initDBPool()
-    await syncDBFile()
+    await syncData(this.db)
     await migrateToLatest(this.db)
-    await updateJieBaDict()
-    await updateSystemBoard()
     this.firehose.run(this.cfg.subscriptionReconnectDelay)
     this.server = this.app.listen(this.cfg.port, this.cfg.listenhost)
     http_server['express'] = this.server

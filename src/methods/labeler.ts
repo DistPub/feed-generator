@@ -5,7 +5,7 @@ import { validateAuth } from '../auth'
 import { computeTopic, getPostImgurls } from '../subscription'
 import { Outbox } from './outbox'
 import { seq, getPostByUri, getDid } from '../config'
-import { syncDBFile } from '../dbpool'
+import { syncData } from '../server'
 
 export const http_server = {'express': <any>null}
 export const commandRestart = () => {
@@ -118,14 +118,8 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
     }
-
-    else if (reasonType === 'com.atproto.moderation.defs#reasonSpam') {
-      // not good
-      if (reason === 'sync')
-        await syncDBFile()
-      let target = getDid(did || uri)
-      ret = await isNotGoodUser(target, true)
-      console.log(`report not good did: ${target} ret: ${ret}`)
+    else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:sync') {
+      await syncData(ctx.db)
     }
 
     else if (reasonType === 'com.atproto.moderation.defs#reasonSexual' || (reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'nsfw')) {
