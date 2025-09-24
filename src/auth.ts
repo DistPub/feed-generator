@@ -7,9 +7,19 @@ export const validateAuth = async (
   serviceDid: string,
   didResolver: DidResolver,
 ): Promise<string> => {
-  const { authorization = '' } = req.headers
+  let authorization = ''
+  if (req.headers['x-bsky-topics']) {
+    authorization = req.headers['x-bsky-topics'] as string
+  } else if (req.headers['authorization']) {
+    authorization = req.headers['authorization'] as string
+  }
+
+  if (!authorization) {
+    throw new AuthRequiredError('anonymous')
+  }
+
   if (!authorization.startsWith('Bearer ')) {
-    throw new AuthRequiredError()
+    throw new AuthRequiredError('Not a Bearer token')
   }
   const jwt = authorization.replace('Bearer ', '').trim()
   const nsid = parseReqNsid(req)
