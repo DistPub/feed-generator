@@ -4,6 +4,7 @@ import express from 'express'
 import { DidResolver, MemoryCache } from '@atproto/identity'
 import { createServer } from './lexicon'
 import feedGeneration from './methods/feed-generation'
+import feedInteraction from './methods/feed-interaction'
 import describeGenerator from './methods/describe-generator'
 import modImagePost from './methods/mod-image-post'
 import topicTrending from './methods/topic'
@@ -64,6 +65,7 @@ export class FeedGenerator {
       cfg,
     }
     feedGeneration(server, ctx)
+    feedInteraction(server, ctx)
     describeGenerator(server, ctx)
     modImagePost(server, ctx)
     topicTrending(server, ctx)
