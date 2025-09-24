@@ -6,6 +6,7 @@ import { validateAuth } from '../auth'
 import { AtUri } from '@atproto/syntax'
 import { event_status } from '../util/subscription'
 import { commandRestart } from './labeler'
+import { getUserMsg, PRIORITY_IMPORTANT, PRIORITY_NORMAL, PRIORITY_SUPER } from '../board'
 
 function isValidAndOver60s(date) {
   const ts = date.getTime()
@@ -45,27 +46,31 @@ export default function (server: Server, ctx: AppContext) {
       commandRestart()
     }
 
-    // 用户身份获取
-    let requesterDid: string | undefined
+    // 根据用户身份推送系统消息
+    let msg
     try {
-      requesterDid = await validateAuth(
+      const requesterDid = await validateAuth(
         req,
         ctx.cfg.serviceDid,
         ctx.didResolver,
       )
+      msg = await getUserMsg(requesterDid, ctx.db)
     } catch (err) {
-      if (err.errorMessage === 'anonymous') {
-        console.log('anonymous request')
-      } else {
+      if (err.errorMessage != 'anonymous') {
         throw err
       }
     }
-
-    if (requesterDid) {
-      console.log(`feed requested by ${requesterDid}`)
-    }
-
     const body = await algo(ctx, params)
+
+    if (msg?.priority === PRIORITY_NORMAL && !params.cursor) {
+      body.feed.unshift({ post: msg.uri })
+    } else if (msg?.priority === PRIORITY_IMPORTANT) {
+      body.feed.unshift({ post: msg.uri })
+    } else if (msg?.priority === PRIORITY_SUPER){
+      delete body.cursor
+      body.feed = [{ post: msg.uri }]
+    }
+    
     return {
       encoding: 'application/json',
       body: body,

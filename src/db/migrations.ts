@@ -150,3 +150,19 @@ migrations['007'] = {
   async down(db: Kysely<unknown>) {
   },
 }
+migrations['008'] = {
+  async up(db: Kysely<unknown>) {
+    await db.schema
+      .createTable('msg_board')
+      .addColumn('id', 'integer', col => col.primaryKey().autoIncrement())
+      .addColumn('did', 'varchar', (col) => col.notNull())
+      .addColumn('msgId', 'varchar', (col) => col.notNull())
+      .addColumn('status', 'integer', (col) => col.notNull())
+      .addColumn('updatedAt', 'varchar', (col) => col.notNull())
+      .addUniqueConstraint('user_msg_unique', ['did', 'msgId'])
+      .execute()
+  },
+  async down(db: Kysely<unknown>) {
+    await db.schema.dropTable('msg_board').execute()
+  },
+}

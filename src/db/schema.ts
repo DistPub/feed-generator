@@ -6,6 +6,15 @@ export type DatabaseSchema = {
   mod_image_post: ModImagePost
   report_image_post: ReportImagePost
   topic: Topic
+  msg_board: MsgBoard
+}
+
+export type MsgBoard = {
+  id: Generated<number>
+  did: string
+  msgId: string
+  status: number
+  updatedAt: string
 }
 
 export type Topic = {
