@@ -19,6 +19,7 @@ export async function updateSystemBoard() {
     console.log(`update sysetm board from ${process.env.FEED_SYSTEM_BOARD_URL}`)
     const res = await fetch(process.env.FEED_SYSTEM_BOARD_URL as string)
     const data: msg[] = await res.json() as any
+    const now = new Date()
     storage.systemBoard = data.map(item => {
         return {
             id: item.id,
@@ -27,6 +28,11 @@ export async function updateSystemBoard() {
             target: item.target ? item.target.split(',').map(t => t.trim()).filter(did => did.length > 0) : undefined,
             priority: item.priority ?? PRIORITY_NORMAL
         }
+    }).filter(item => {
+        if (item.expire && item.expire < now) {
+            return false
+        }
+        return true
     })
 }
 
