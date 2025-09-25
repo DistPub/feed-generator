@@ -20,7 +20,7 @@ export async function updateSystemBoard() {
     const res = await fetch(process.env.FEED_SYSTEM_BOARD_URL as string)
     const data: msg[] = await res.json() as any
     const now = new Date()
-    storage.systemBoard = data.map(item => {
+    const messages = data.map(item => {
         return {
             id: item.id,
             uri: item.uri,
@@ -28,7 +28,18 @@ export async function updateSystemBoard() {
             target: item.target ? item.target.split(',').map(t => t.trim()).filter(did => did.length > 0) : undefined,
             priority: item.priority ?? PRIORITY_NORMAL
         }
-    }).filter(item => {
+    })
+
+    if (storage.systemBoard) {
+        messages.push(...storage.systemBoard.filter(item => {
+            // exists message added by admin through command:pin-feed
+            if (item.source === 'admin') {
+                return true
+            }
+            return false
+        }))
+    }
+    storage.systemBoard = messages.filter(item => {
         if (item.expire && item.expire < now) {
             return false
         }
@@ -42,7 +53,7 @@ export async function getUserMsg(did: string, db: Database) {
         if (msg.expire && msg.expire < now) {
             continue
         }
-        if (msg.target && !msg.target.includes(did)) {
+        if (msg.target && ((msg.target.includes('*') && msg.target.includes(`!${did}`)) || (!msg.target.includes('*') && !msg.target.includes(did)))) {
             continue
         }
         const sended = await db.selectFrom('msg_board').where('did', '=', did).where('msgId', '=', msg.id).selectAll().executeTakeFirst()
