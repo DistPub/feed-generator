@@ -7,6 +7,7 @@ import { Outbox } from './outbox'
 import { seq, getPostByUri, getDid } from '../config'
 import { syncData } from '../server'
 import { storage } from '../dbpool'
+import { PRIORITY_NORMAL } from '../board'
 
 export const http_server = {'express': <any>null}
 export const commandRestart = () => {
@@ -138,6 +139,7 @@ export default function (server: Server, ctx: AppContext) {
           uri,
           expire,
           target: ['*', `!${getDid(uri)}`],
+          priority: PRIORITY_NORMAL
         })
       }
     }
