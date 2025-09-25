@@ -6,6 +6,7 @@ import { computeTopic, getPostImgurls } from '../subscription'
 import { Outbox } from './outbox'
 import { seq, getPostByUri, getDid } from '../config'
 import { syncData } from '../server'
+import { storage } from '../dbpool'
 
 export const http_server = {'express': <any>null}
 export const commandRestart = () => {
@@ -21,6 +22,10 @@ export const commandRestart = () => {
     }
     process.exit(err ? 1 : 0)
   })
+}
+
+function isAdmin(did: string | undefined) {
+  return did === 'did:web:smite.hukoubook.com'
 }
 
 export default function (server: Server, ctx: AppContext) {
@@ -97,16 +102,16 @@ export default function (server: Server, ctx: AppContext) {
       console.log(`report bot did: ${target} ret: ${ret}`)
     }
 
-    else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonViolation') {
+    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonViolation') {
       await ctx.db
         .deleteFrom('post')
         .where('post.uri', '=', uri)
         .execute()
     }
-    else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:restart') {
+    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:restart') {
       commandRestart()
     }
-    else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:topic') {
+    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:topic') {
       if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
         console.log(`compute topic should from a app.bsky.feed.post record`)
       } else {
@@ -118,8 +123,31 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
     }
-    else if (requester && requester === 'did:web:smite.hukoubook.com' && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:sync') {
+    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:sync') {
       await syncData(ctx.db)
+    }
+    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:pin-feed') {
+      if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
+        console.log(`pin feed should from a app.bsky.feed.post record`)
+      } else {
+        const expire = new Date()
+        expire.setHours(expire.getHours() + 12)
+        console.log(`pin feed uri: ${uri} expire: ${expire}`)
+        storage.systemBoard.push({
+          id: `admin-${new Date().toISOString()}`,
+          uri,
+          expire,
+          target: ['*', `!${getDid(uri)}`],
+        })
+      }
+    }
+    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:unpin-feed') {
+      if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
+        console.log(`unpin feed should from a app.bsky.feed.post record`)
+      } else {
+        console.log(`unpin feed uri: ${uri}`)
+        storage.systemBoard = storage.systemBoard.filter(item => item.uri !== uri)
+      }
     }
 
     else if (reasonType === 'com.atproto.moderation.defs#reasonSexual' || (reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'nsfw')) {

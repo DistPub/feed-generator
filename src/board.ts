@@ -33,7 +33,7 @@ export async function updateSystemBoard() {
     if (storage.systemBoard) {
         messages.push(...storage.systemBoard.filter(item => {
             // exists message added by admin through command:pin-feed
-            if (item.source === 'admin') {
+            if (item.id.startsWith('admin-')) {
                 return true
             }
             return false
