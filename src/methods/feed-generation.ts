@@ -62,9 +62,8 @@ export default function (server: Server, ctx: AppContext) {
     }
     const body = await algo(ctx, params)
 
-    if (msg?.priority === PRIORITY_NORMAL && !params.cursor) {
-      body.feed.unshift({ post: msg.uri })
-    } else if (msg?.priority === PRIORITY_IMPORTANT) {
+    if ((msg?.priority === PRIORITY_NORMAL && !params.cursor) || (msg?.priority === PRIORITY_IMPORTANT)) {
+      body.feed = body.feed.filter(item => item.post !== msg.uri)
       body.feed.unshift({ post: msg.uri })
     } else if (msg?.priority === PRIORITY_SUPER){
       delete body.cursor
