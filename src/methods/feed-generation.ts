@@ -17,10 +17,10 @@ function isValidAndOver60s(date) {
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.feed.getFeedSkeleton(async ({ params, req }) => {
     // 引流动态源
-    if (params.feed == 'at://did:web:cgv.hukoubook.com/app.bsky.feed.generator/china-good-voice') {
+    if (params.feed == process.env.DRIVE_TRAFFIC_FEED_URI) {
       return {
         encoding: 'application/json',
-        body: {feed: [{post: "at://did:web:cgv.hukoubook.com/app.bsky.feed.post/3lmjfrs5jc226"}]}
+        body: {feed: [{post: process.env.DRIVE_TRAFFIC_POST_URI as string}]}
       }
     }
 
