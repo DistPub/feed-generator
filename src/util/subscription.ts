@@ -118,6 +118,14 @@ export const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
       const recordBytes = car.blocks.get(op.cid)
       if (!recordBytes) continue
       const record = cborToLexRecord(recordBytes)
+
+      // when user import repo
+      // the history record need ignore
+      // we only handle 1h window record
+      const time = record.createdAt ? new Date(record.createdAt as string) : new Date()
+      const offset = (new Date()).getTime() - time.getTime()
+      if (offset > 3600*1000) continue
+
       const create = { uri, cid: op.cid.toString(), author: evt.repo }
       if (collection === ids.AppBskyFeedPost && isPost(record)) {
         opsByType.posts.creates.push({ record, ...create })

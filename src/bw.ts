@@ -122,25 +122,19 @@ export async function computeBot(did: string, ret: any = undefined) {
     }
 
     // check frequncy
-    const feeds = [...data.feed]
-    let a = new Date(feeds[0].post.record.createdAt) as any
-    let b: number;
-    let t: number;
-    
-    if (feeds.length < 30) {
-      do {
-        b = new Date(feeds.pop().post.record.createdAt) as any
-        t = (a - b)/feeds.length/1000/60
-        if (t < 1) break
-      } while (feeds.length >= 4)
-    } else {
-      do {
-        b = new Date(feeds.pop().post.record.createdAt) as any
-        t = (a - b)/feeds.length/1000/60/60
-        if (t < 1) break
-      } while (feeds.length >= 13)
+    let t = 1
+    let idx = 0
+    const window = data.feed.length < 30 ? 4 : 13
+    const unit = data.feed.length < 30 ? 60 : 3600
+    while ((data.feed.length - idx) >= window) {
+      const segments: any[] = data.feed.slice(idx, idx + window)
+      const [a, b] = [segments.shift(), segments.pop()]
+      const a_time = (new Date(a.post.record.createdAt)).getTime()
+      const b_time = (new Date(b.post.record.createdAt)).getTime()
+      t = (a_time - b_time)/(window - 1)/1000/unit
+      if (t < 1) break
+      idx ++
     }
-
     ret.bot = t < 1 ? 1 : 0
 
     if (ret.bot) {
@@ -202,7 +196,7 @@ async function fetchModRs(did: string) {
   } catch (error) {
     return -1
   }
-  
+
   let labels = data.labels.filter(item => {
     return nsfw_labels.includes(item.val)
   })
