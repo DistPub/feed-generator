@@ -122,10 +122,16 @@ export async function computeBot(did: string, ret: any = undefined) {
     }
 
     // check frequncy
+    const registerTime = (new Date(data.feed[0].post.author.createdAt)).getTime()
+    const nowTime = (new Date()).getTime()
+    let newUser = true
+    if ((nowTime - registerTime)/1000/3600/24 > 7 || data.feed.length >= 13) {
+      newUser = false
+    }
     let t = 1
     let idx = 0
-    const window = data.feed.length < 30 ? 4 : 13
-    const unit = data.feed.length < 30 ? 60 : 3600
+    const window = newUser ? 4 : 13
+    const unit = newUser ? 60 : 3600
     while ((data.feed.length - idx) >= window) {
       const segments: any[] = data.feed.slice(idx, idx + window)
       const [a, b] = [segments.shift(), segments.pop()]
@@ -167,7 +173,7 @@ export async function computeBot(did: string, ret: any = undefined) {
       }
     }
 
-    if (counter >= (data.feed.length * 0.8) && data.feed.length >= 13) {
+    if (counter >= (data.feed.length * 0.8) && !newUser) {
       ret.bot = 1
     }
 
