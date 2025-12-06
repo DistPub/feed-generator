@@ -1,5 +1,5 @@
 import { formatDate, getDB, getOffsetDate, storage } from './dbpool'
-import { seq, urlPattern } from './config'
+import { getDid, seq, urlPattern } from './config'
 import { Database } from './db'
 
 export async function getBW(did: string) {
@@ -287,6 +287,38 @@ export async function isNotGoodTopic(topic: string) {
   .where('not_good_topic.topic', '=', topic)
   .execute()
   return rows.length
+}
+
+export async function bufferBanTopic(uri: string, db: Database, buffer: number = 3600000) {
+  let data = await db
+    .selectFrom('topic')
+    .select(['topic', 'time'])
+    .where('uri', '=', uri)
+    .execute()
+
+  if (data.length === 0) {
+    console.warn(`not found topic by uri: ${uri}`)
+  }
+
+  const banTopics = data.map(row => row.topic)
+  const ltime = data[0].time - buffer
+  const gtime = data[0].time + buffer
+  const rows = await db
+    .selectFrom('topic')
+    .selectAll()
+    .where('topic', 'in', banTopics)
+    .where('time', '>=', ltime)
+    .where('time', '<=', gtime)
+    .execute();
+  const dids = [...new Set(rows.map(r => r.uri).map(uri => getDid(uri)))];
+
+  for (let did of dids) {
+    const ret = await getBW(did)
+    ret.bot = 1
+    await putBW([ret])
+    await removeFromDB(did)
+  }
+  console.log(`topic buffer ban ${dids.length} did`)
 }
 
 export async function addNotGoodTopics(topics: string[]) {

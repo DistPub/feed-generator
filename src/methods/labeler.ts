@@ -1,6 +1,6 @@
 import { Server } from '../lexicon'
 import { AppContext } from '../config'
-import { getBW, isNotGoodUser, computeBot, isNSFW, signLabel } from '../bw'
+import { getBW, isNotGoodUser, computeBot, isNSFW, signLabel, bufferBanTopic } from '../bw'
 import { validateAuth } from '../auth'
 import { computeTopic, getPostImgurls } from '../subscription'
 import { Outbox } from './outbox'
@@ -122,6 +122,14 @@ export default function (server: Server, ctx: AppContext) {
           let imgUrls = await getPostImgurls(post, false, false)
           await computeTopic(post, imgUrls, ctx.db)
         }
+      }
+    }
+    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:topic-buffer-ban') {
+      if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
+        console.log(`topic buffer ban should from a app.bsky.feed.post record`)
+      } else {
+        console.log(`topic buffer ban uri: ${uri} cid: ${cid}`)
+        await bufferBanTopic(uri, ctx.db)
       }
     }
     else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:sync') {
