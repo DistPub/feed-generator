@@ -23,6 +23,9 @@ const makeRouter = (ctx: AppContext) => {
   router.get('/trending', (_, res) => {
     res.sendFile(process.cwd() + '/public/trending.html');
   });
+  router.get('/report', (_, res) => {
+    res.sendFile(process.cwd() + '/public/report.html');
+  });
 
   return router
 }
