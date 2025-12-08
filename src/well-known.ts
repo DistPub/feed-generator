@@ -26,6 +26,9 @@ const makeRouter = (ctx: AppContext) => {
   router.get('/report', (_, res) => {
     res.sendFile(process.cwd() + '/public/report.html');
   });
+  router.get('/label', (_, res) => {
+    res.sendFile(process.cwd() + '/public/label.html');
+  });
 
   return router
 }

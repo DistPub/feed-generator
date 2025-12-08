@@ -214,7 +214,8 @@ async function fetchModRs(did: string) {
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getPosts?${uris.slice(i, i + 25).join('&')}`
     let response = await fetch(url)
     let data = await response.json() as any
-    posts = posts.concat(data.posts)
+    // ignore missing
+    posts = posts.concat(data.posts.filter(item => !item.missing))
   }
   let nsfw = 0
   if (posts.length) nsfw = 1

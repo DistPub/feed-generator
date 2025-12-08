@@ -1,0 +1,121 @@
+<div>
+  <label for="didInput">输入DID字符串:</label>
+  <input type="text" id="didInput" placeholder="请输入DID字符串">
+  <button id="queryButton">查询bluesky官方标签</button>
+</div>
+<div id="result"></div>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f9f9f9;
+    color: #333;
+  }
+
+  div {
+    margin-bottom: 20px;
+  }
+
+  label {
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 300px;
+  }
+
+  button {
+    padding: 8px 16px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  #result {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f2f2f2;
+  }
+
+  a {
+    color: #007BFF;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>
+<script>
+  document.getElementById('queryButton').addEventListener('click', queryLabels);
+  document.getElementById('didInput').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+      queryLabels();
+    }
+  });
+
+  function queryLabels() {
+    const did = document.getElementById('didInput').value.trim();
+    if (!did) {
+      alert('请输入有效的DID字符串');
+      return;
+    }
+
+    const url = new URL(`https://go.smitechow.com/+x/mod.bsky.app/xrpc/com.atproto.label.queryLabels?limit=250`)
+	url.searchParams.append('uriPatterns', `at://${did}/app.bsky.feed.post/*`)
+	const resultDiv = document.getElementById('result');
+	resultDiv.innerHTML = '<p>加载中...</p>';
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('查询失败，请检查DID字符串是否正确');
+        }
+        return response.json();
+      })
+      .then(data => {const resultDiv = document.getElementById('result');
+      if (data.labels && Array.isArray(data.labels)) {let table = '<table border="1"><tr><th>Source</th><th>Value</th><th>URI</th></tr>';
+        data.labels.forEach(label => {
+          const uri = label.uri && label.uri.includes('app.bsky.feed.post')
+            ? `https://app.hukoubook.com/profile/${did}/post/${label.uri.split('/').pop()}`
+            :  label.uri ? `https://pdsls.hukoubook.com/${label.uri}` : 'N/A';
+          table += `<tr><td>${label.src || 'N/A'}</td><td>${label.val || 'N/A'}</td><td>${label.uri ? `<a href="${uri}" target="_blank">${label.uri}</a>` : 'N/A'}</td></tr>`;
+        });
+        table += '</table>';
+        resultDiv.innerHTML = table;
+      } else {
+        resultDiv.innerHTML = 'No labels found or invalid response format.';
+      }
+    })
+    .catch(error => {
+        alert(error.message);
+      });
+  }
+</script>
