@@ -298,7 +298,13 @@ export async function bufferBanTopic(uri: string, db: Database, buffer: number =
     .execute()
 
   if (data.length === 0) {
-    console.warn(`not found topic by uri: ${uri}`)
+    console.warn(`not found topic by uri: ${uri}, only ban report uri author`)
+    const did = getDid(uri)
+    const ret = await getBW(did)
+    ret.bot = 1
+    await putBW([ret])
+    await removeFromDB(did)
+    return
   }
 
   const banTopics = data.map(row => row.topic)
