@@ -26,7 +26,7 @@ export async function getBW(did: string) {
     if (rows.length) {
         return rows[0]
     }
-    // try to restore from fatesky
+    // try to restore
   try {
     const url = new URL('https://api.bsky.app/xrpc/com.atproto.label.queryLabels')
     url.searchParams.set('uriPatterns', did)
@@ -59,6 +59,7 @@ export async function getBW(did: string) {
       return ret
     }
   } catch (error) {
+    console.error('restore from bsky labels error', error)
     return {did, bot: -1, nsfw: -1}
   }
 }
