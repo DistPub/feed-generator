@@ -27,10 +27,10 @@ export async function getBW(did: string) {
         return rows[0]
     }
     // try to restore
-  try {
     const url = new URL('https://api.bsky.app/xrpc/com.atproto.label.queryLabels')
     url.searchParams.set('uriPatterns', did)
     url.searchParams.set('sources', process.env.LABELER_DID as string)
+  try {
     const res = await fetch(url)
     const data = await res.json() as any
     if (!data.error) {
@@ -59,7 +59,7 @@ export async function getBW(did: string) {
       return ret
     }
   } catch (error) {
-    console.error('restore from bsky labels error', error)
+    console.error(`restore from bsky labels error ${url.toString()}`, error)
     return {did, bot: -1, nsfw: -1}
   }
 }
@@ -228,13 +228,16 @@ const nsfw_labels: string[] = [
 async function fetchModRs(did: string) {
   let aturi = `at://${did}/app.bsky.feed.post/*`
   let url = `${process.env.MOD_API}/xrpc/com.atproto.label.queryLabels?uriPatterns=${encodeURIComponent(aturi)}&limit=50`
-  console.log(url)
-  let response = await fetch(url)
 
   let data;
   try {
+    const response = await fetch(url)
     data = await response.json() as any
+    if (data.error) {
+      throw Error(`${data.error} ${data.message}`)
+    }
   } catch (error) {
+    console.error(`fetch mod error ${url}`, error)
     return -1
   }
 
