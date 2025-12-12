@@ -26,7 +26,38 @@ export async function getBW(did: string) {
     if (rows.length) {
         return rows[0]
     }
+    // try to restore from fatesky
+  try {
+    const res = await fetch(`https://fatesky.hukoubook.com/xrpc/app.bsky.actor.getProfile?actor=${did}`)
+    const profile = await res.json() as any
+    if (!profile.error) {
+      const labels = profile.labels.filter(item => item.src === process.env.LABELER_DID).map(item => item.val)
+      let bot = -1
+      let nsfw = -1
+      let needRestore = false
+      if (labels.includes('bot')) {
+        bot = 1
+        needRestore = true
+      } else if(labels.includes('not-bot')) {
+        bot = 0
+        needRestore = true
+      }
+      if (labels.includes('nsfw')) {
+        nsfw = 1
+        needRestore = true
+      } else if(labels.includes('not-nsfw')) {
+        nsfw = 0
+        needRestore = true
+      }
+      const ret = {did, bot, nsfw}
+      if (needRestore) {
+        await putBW([ret])
+      }
+      return ret
+    }
+  } catch (error) {
     return {did, bot: -1, nsfw: -1}
+  }
 }
 
 export async function putBW(values: any) {
