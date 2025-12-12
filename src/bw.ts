@@ -28,10 +28,13 @@ export async function getBW(did: string) {
     }
     // try to restore from fatesky
   try {
-    const res = await fetch(`https://fatesky.hukoubook.com/xrpc/app.bsky.actor.getProfile?actor=${did}`)
-    const profile = await res.json() as any
-    if (!profile.error) {
-      const labels = profile.labels.filter(item => item.src === process.env.LABELER_DID).map(item => item.val)
+    const url = new URL('https://api.bsky.app/xrpc/com.atproto.label.queryLabels')
+    url.searchParams.set('uriPatterns', did)
+    url.searchParams.set('sources', process.env.LABELER_DID as string)
+    const res = await fetch(url)
+    const data = await res.json() as any
+    if (!data.error) {
+      const labels = data.labels.map(item => item.val)
       let bot = -1
       let nsfw = -1
       let needRestore = false
