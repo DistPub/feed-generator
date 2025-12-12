@@ -233,8 +233,8 @@ async function fetchModRs(did: string) {
   try {
     const response = await fetch(url)
     data = await response.json() as any
-    if (data.error) {
-      throw Error(`${data.error} ${data.message}`)
+    if (!data.labels) {
+      throw Error(`no labels, data is ${JSON.stringify(data)}`)
     }
   } catch (error) {
     console.error(`fetch mod error ${url}`, error)
