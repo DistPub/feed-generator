@@ -32,8 +32,8 @@ export async function getPostByUri(uri: string) {
 
 	let data = await response.json() as any
 
-	if (data.error) return
-	
+	if (data.error || data.thread.notFound) return
+
 	let post: CreateOp<Record> = {
 		author: data.thread.post.author.did,
 		record: data.thread.post.record,
