@@ -247,17 +247,16 @@ async function fetchModRs(did: string) {
 
   // check labeled uri if exists or not
   let uris = labels.map(item => `uris=${encodeURIComponent(item.uri)}`)
-  let posts = []
   for (let i = 0; i < uris.length; i += 25) {
     let url = `${process.env.PUBLIC_API}/xrpc/app.bsky.feed.getPosts?${uris.slice(i, i + 25).join('&')}`
     let response = await fetch(url)
     let data = await response.json() as any
     // ignore missing
-    posts = posts.concat(data.posts.filter(item => !item.missing))
+    if (data.posts && data.posts.filter(item => !item.missing).length > 0) {
+      return 1
+    }
   }
-  let nsfw = 0
-  if (posts.length) nsfw = 1
-  return nsfw
+  return 0
 }
 
 export async function isNSFW(did: string, useCache: boolean = true) {
