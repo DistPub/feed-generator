@@ -286,19 +286,25 @@ export async function isNSFW(did: string, useCache: boolean = true) {
     return -1
 }
 
-import { cntld, cctld } from './country'
+import { cntld } from './country'
 
 export async function isNotChineseWebsite(hostname: string) {
-    const parts = hostname.split('.');
+    const parts = hostname.toLowerCase().split('.');
     const tld = `.${parts.pop()}`
-    if (!cntld.includes(tld) && cctld.includes(tld)) return true
+    if (!cntld.includes(tld)) return true
 
     let db = await getDB('not.db', false, false)
+    const figs = hostname.toLowerCase().split('.')
+    const domains = [hostname]
+    while (figs.length > 1) {
+      domains.push(`*.${figs.join('.')}`)
+      figs.shift()
+    }
     let rows = await db.selectFrom('not_chinese_website')
     .selectAll()
-    .where('not_chinese_website.hostname', '=', hostname)
+    .where('not_chinese_website.hostname', 'in', domains)
     .execute()
-    return rows.length
+    return rows.length > 0
 }
 
 export async function authorPostNotGoodTopic(author: string, topics: string[] = []) {
