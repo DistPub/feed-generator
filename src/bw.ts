@@ -2,7 +2,7 @@ import { formatDate, getDB, getOffsetDate, storage } from './dbpool'
 import { getDid, seq, urlPattern } from './config'
 import { Database } from './db'
 
-export async function getBW(did: string) {
+export async function getBW(did: string, fallback: boolean = true) {
     let today = new Date()
     const query = async (db) => {
         return await (db.selectFrom('black_white')
@@ -60,7 +60,11 @@ export async function getBW(did: string) {
     }
   } catch (error) {
     console.error(`restore from bsky labels error ${url.toString()}`, error)
-    return {did, bot: -1, nsfw: -1}
+    if (fallback) {
+      return { did, bot: -1, nsfw: -1 }
+    } else {
+      throw Error(`getBW restore error`)
+    }
   }
 }
 
@@ -114,9 +118,9 @@ export async function putBW(values: any) {
     seq.emit('events', events)
 }
 
-export async function isBot(did: string) {
+export async function isBot(did: string, fallback: boolean = true) {
     // try cache
-    let ret = await getBW(did)
+    let ret = await getBW(did, fallback)
     if (ret.bot !== -1) {
         return ret.bot
     }

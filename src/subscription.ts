@@ -92,7 +92,7 @@ export async function computeTopic(post: CreateOp<Record>, imgUrls: string | nul
       console.error('getocrTopics failed:', e);
     }
   }
-  
+
   if (topics.length) {
     await db
       .insertInto('topic')
@@ -164,7 +164,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     let postsToCreates: any = []
     for (let create of postsToCreate) {
-      let bot = await isBot(create.author)
+      let bot
+      try {
+        bot = await isBot(create.author, false)
+      } catch(error) {
+        // ignore when restore error
+        continue
+      }
 
       if (bot !== 1) {
         postsToCreates.push(create)
@@ -201,7 +207,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       const imgUrls = await getPostImgurls(post)
       imageCache[post.uri] = imgUrls
       const topics = await computeTopic(post, imgUrls, this.db)
-      
+
       let selectPost = true
       if (topics.length) {
         if (await authorPostNotGoodTopic(post.author, topics)) {
