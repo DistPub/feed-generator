@@ -134,7 +134,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       })
       .filter((create) => {
         // check content first
-        let matched = regex.test(create.record.text)
+        let content = create.record.text
+        if (create.record?.embed?.external) {
+          let external = create.record.embed.external as any
+          content += external.title + external.description
+        }
+
+        let matched = regex.test(content)
         if (matched) {
           return true
         }
@@ -183,12 +189,6 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       }
 
       let external = create.record.embed.external as any
-      let content = external.title + external.description
-
-      if (!regex.test(content)) {
-        continue
-      }
-
       let url = new URL(external.uri)
       if (await isNotChineseWebsite(url.hostname)) {
         continue
