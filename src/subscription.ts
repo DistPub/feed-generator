@@ -18,20 +18,20 @@ function getEmbedImgurls(author: string, embed: any, comeFromSub: boolean) {
   if (embed?.images) {
     const images = embed.images as Array<any>
     const imgLinks = images.map(item => {
-      return `https://cdn.bsky.app/img/feed_thumbnail/plain/${author}/${comeFromSub ? item.image.ref : item.image.ref.$link}`
+      return `https://fatesky-cdn.hukoubook.com/img/feed_thumbnail/plain/${author}/${comeFromSub ? item.image.ref : item.image.ref.$link}`
     })
     imgUrls = imgLinks.join()
   }
 
   else if (embed?.video) {
     const video = embed.video as any
-    imgUrls = `https://video.bsky.app/watch/${author}/${comeFromSub ? video.ref : video.ref.$link }/thumbnail.jpg`
+    imgUrls = `https://fatesky-cdn.hukoubook.com/watch/${author}/${comeFromSub ? video.ref : video.ref.$link }/thumbnail.jpg`
   }
 
   else if (embed?.external) {
     const external = embed.external as any
     if (external?.thumb) {
-      imgUrls = `https://cdn.bsky.app/img/feed_thumbnail/plain/${author}/${comeFromSub ? external.thumb.ref : external.thumb.ref.$link}`
+      imgUrls = `https://fatesky-cdn.hukoubook.com/img/feed_thumbnail/plain/${author}/${comeFromSub ? external.thumb.ref : external.thumb.ref.$link}`
     }
   }
 
@@ -158,7 +158,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         }
 
         // detect content, only accept english or unknown
-        const lang = detect(create.record.text)
+        const lang = detect(content)
         if (lang === 'en' || lang === '') {
           return true
         }
@@ -189,6 +189,12 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       }
 
       let external = create.record.embed.external as any
+      const externalContent = external.title + external.description
+      let matched = regex.test(externalContent)
+      if (!matched) {
+        continue
+      }
+
       let url = new URL(external.uri)
       if (await isNotChineseWebsite(url.hostname)) {
         continue
