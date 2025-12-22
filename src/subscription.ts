@@ -109,6 +109,28 @@ export async function computeTopic(post: CreateOp<Record>, imgUrls: string | nul
   return topics
 }
 
+function getTextWithoutLink(record: Record) {
+  const facets = record.facets ?? []
+  const links = facets.filter(item => {
+    const types = item.features.map(feature => feature.$type)
+    return types.includes('app.bsky.richtext.facet#link')
+  })
+  const ignores = links.map(item => item.index)
+  let str = record.text
+  const len = str.length;
+  for (const ignore of ignores) {
+    const s = Math.max(0, ignore.byteStart);
+    const e = Math.min(len - 1, ignore.byteEnd);
+    if (s > e) return str;                 // 非法区间直接返回原串
+    str = (
+      str.slice(0, s) +                     // 前面不动
+      ' '.repeat(e - s + 1) +               // 中间替换成空格
+      str.slice(e + 1)                      // 后面不动
+    );
+  }
+  return str
+}
+
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handlePostToDelete(ops: OperationsByType) {
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
@@ -127,9 +149,12 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       })
       .filter((create) => {
         // no ref with nothing
-        if (create.record?.embed?.record)
-          if (!create.record.embed?.media && create.record.text === '')
+        if ((create.record?.embed?.record || create.record?.embed?.external) && (!create.record.embed?.media)) {
+          const text: string = getTextWithoutLink(create.record)
+          if (text.trim() === '') {
             return false
+          }
+        }
         return true
       })
       .filter((create) => {
