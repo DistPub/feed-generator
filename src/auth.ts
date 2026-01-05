@@ -8,9 +8,7 @@ export const validateAuth = async (
   didResolver: DidResolver,
 ): Promise<string> => {
   let authorization = ''
-  if (req.headers['x-bsky-topics']) {
-    authorization = req.headers['x-bsky-topics'] as string
-  } else if (req.headers['authorization']) {
+  if (req.headers['authorization']) {
     authorization = req.headers['authorization'] as string
   }
 
@@ -23,7 +21,8 @@ export const validateAuth = async (
   }
   const jwt = authorization.replace('Bearer ', '').trim()
   const nsid = parseReqNsid(req)
-  const parsed = await verifyJwt(jwt, serviceDid, nsid, async (did: string) => {
+  // audience not matter
+  const parsed = await verifyJwt(jwt, null, nsid, async (did: string) => {
     return didResolver.resolveAtprotoKey(did)
   })
   return parsed.iss
