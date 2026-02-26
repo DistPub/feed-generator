@@ -29,6 +29,34 @@ function isAdmin(did: string | undefined) {
   return did === 'did:web:smite.hukoubook.com'
 }
 
+function isOhterReason(reasonType: string) {
+  return [
+    'com.atproto.moderation.defs#reasonOther', // old version app
+    'tools.ozone.report.defs#reasonOther',
+  ].includes(reasonType)
+}
+
+function isViolationReason(reasonType: string) {
+  return [
+    'com.atproto.moderation.defs#reasonViolation', // old version app
+    'tools.ozone.report.defs#reasonRuleOther',
+    'tools.ozone.report.defs#reasonRuleProhibitedSales',
+    'tools.ozone.report.defs#reasonRuleSiteSecurity'
+  ].includes(reasonType)
+}
+
+function isSexualReason(reasonType: string) {
+  return [
+    'com.atproto.moderation.defs#reasonSexual', // old version app
+    'tools.ozone.report.defs#reasonSexualUnlabeled',
+    'tools.ozone.report.defs#reasonSexualAbuseContent',
+    'tools.ozone.report.defs#reasonSexualNCII',
+    'tools.ozone.report.defs#reasonSexualDeepfake',
+    'tools.ozone.report.defs#reasonSexualAnimal',
+    'tools.ozone.report.defs#reasonSexualOther'
+  ].includes(reasonType)
+}
+
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ req, params }) => {
     console.log(`[queryLabels]${JSON.stringify(req.headers)}`)
@@ -96,23 +124,23 @@ export default function (server: Server, ctx: AppContext) {
     let ret = 100
 
 
-    if (reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'bot') {
+    if (isOhterReason(reasonType) && reason === 'bot') {
       // bot
       let target = getDid(did || uri)
       ret = await computeBot(target)
       console.log(`report bot did: ${target} ret: ${ret}`)
     }
 
-    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonViolation') {
+    else if (isAdmin(requester) && isViolationReason(reasonType)) {
       await ctx.db
         .deleteFrom('post')
         .where('post.uri', '=', uri)
         .execute()
     }
-    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:restart') {
+    else if (isAdmin(requester) && isOhterReason(reasonType) && reason === 'command:restart') {
       commandRestart()
     }
-    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:topic') {
+    else if (isAdmin(requester) && isOhterReason(reasonType) && reason === 'command:topic') {
       if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
         console.log(`compute topic should from a app.bsky.feed.post record`)
       } else {
@@ -124,7 +152,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
     }
-    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:topic-buffer-ban') {
+    else if (isAdmin(requester) && isOhterReason(reasonType) && reason === 'command:topic-buffer-ban') {
       if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
         console.log(`topic buffer ban should from a app.bsky.feed.post record`)
       } else {
@@ -132,10 +160,10 @@ export default function (server: Server, ctx: AppContext) {
         await bufferBanTopic(uri, ctx.db)
       }
     }
-    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:sync') {
+    else if (isAdmin(requester) && isOhterReason(reasonType) && reason === 'command:sync') {
       await syncData(ctx.db)
     }
-    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:pin-feed') {
+    else if (isAdmin(requester) && isOhterReason(reasonType) && reason === 'command:pin-feed') {
       if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
         console.log(`pin feed should from a app.bsky.feed.post record`)
       } else {
@@ -151,7 +179,7 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
     }
-    else if (isAdmin(requester) && reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'command:unpin-feed') {
+    else if (isAdmin(requester) && isOhterReason(reasonType) && reason === 'command:unpin-feed') {
       if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
         console.log(`unpin feed should from a app.bsky.feed.post record`)
       } else {
@@ -160,7 +188,7 @@ export default function (server: Server, ctx: AppContext) {
       }
     }
 
-    else if (reasonType === 'com.atproto.moderation.defs#reasonSexual' || (reasonType === 'com.atproto.moderation.defs#reasonOther' && reason === 'nsfw')) {
+    else if (isSexualReason(reasonType) || (isOhterReason(reasonType) && reason === 'nsfw')) {
       // nsfw
       if (!uri || uri.indexOf('app.bsky.feed.post') === -1) {
         console.log(`report nsfw should from a app.bsky.feed.post record`)
