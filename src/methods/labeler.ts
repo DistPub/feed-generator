@@ -5,6 +5,7 @@ import { validateAuth } from '../auth'
 import { computeTopic, getPostImgurls } from '../subscription'
 import { Outbox } from './outbox'
 import { seq, getPostByUri, getDid } from '../config'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import { syncData } from '../server'
 import { storage } from '../dbpool'
 import { PRIORITY_NORMAL } from '../board'
@@ -63,7 +64,12 @@ export default function (server: Server, ctx: AppContext) {
     const { uriPatterns, sources, limit, cursor } = params
     let labels: any = []
     for (let uri of uriPatterns) {
-      let did = getDid(uri)
+      let did: string
+      try {
+        did = getDid(uri)
+      } catch (error) {
+        throw new InvalidRequestError(`unsupported uriPattern: ${uri}`)
+      }
       let ret = await getBW(did)
       if (ret.bot !== -1) {
         labels.push({
@@ -126,7 +132,12 @@ export default function (server: Server, ctx: AppContext) {
 
     if (isOhterReason(reasonType) && reason === 'bot') {
       // bot
-      let target = getDid(did || uri)
+      let target: string
+      try {
+        target = getDid(did || uri)
+      } catch (error) {
+        throw new InvalidRequestError(`unsupported subject: ${did || uri}`)
+      }
       ret = await computeBot(target)
       console.log(`report bot did: ${target} ret: ${ret}`)
     }
