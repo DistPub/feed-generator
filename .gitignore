@@ -137,3 +137,6 @@ dist
 # intellij
 .idea/
 *.iml
+
+# WorkBuddy workspace data
+.workbuddy/

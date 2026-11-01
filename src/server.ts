@@ -15,6 +15,7 @@ import { AppContext, Config } from './config'
 import wellKnown from './well-known'
 import { initDBPool, deleteDB, syncDBFile, checkTalkTooMUchPeopleIsBot, storage } from './dbpool'
 import { loggerMiddleware } from './logger'
+import { Sentry } from './sentry'
 import { updateJieBaDict } from './topic'
 import { updateSystemBoard } from './board'
 
@@ -78,6 +79,8 @@ export class FeedGenerator {
     labeler(server, ctx)
     app.use(server.xrpc.router)
     app.use(wellKnown(ctx))
+    // Sentry Express 错误处理中间件，必须注册在所有路由之后
+    Sentry.setupExpressErrorHandler(app)
     return new FeedGenerator(app, db, firehose, cfg)
   }
 
