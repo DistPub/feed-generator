@@ -1,5 +1,7 @@
 import http from 'http'
 import events from 'events'
+import fs from 'fs'
+import path from 'path'
 import express from 'express'
 import { DidResolver, MemoryCache } from '@atproto/identity'
 import { createServer } from './lexicon'
@@ -23,6 +25,22 @@ export async function syncData(db: Database) {
   await syncDBFile()
   await updateJieBaDict()
   await updateSystemBoard()
+}
+
+// 健康监测：GET /xrpc/_health
+function healthRoute(): express.RequestHandler {
+  let version = '0.0.0'
+  try {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8'),
+    )
+    version = pkg.version ?? version
+  } catch {
+    // 读取失败不影响健康检查本身
+  }
+  return (_req, res) => {
+    res.status(200).json({ version })
+  }
 }
 
 export class FeedGenerator {
@@ -65,6 +83,13 @@ export class FeedGenerator {
         textLimit: 100 * 1024, // 100kb
         blobLimit: 5 * 1024 * 1024, // 5mb
       },
+      // 未实现的 xrpc 方法统一返回 404，避免默认 catchall 产生 501 + "Error: null" 日志
+      catchall: (req, res) => {
+        res.status(404).json({
+          error: 'XRPCMethodNotFound',
+          message: `Method not found: ${req.params?.methodId ?? 'unknown'}`,
+        })
+      },
     })
     const ctx: AppContext = {
       db,
@@ -77,6 +102,8 @@ export class FeedGenerator {
     modImagePost(server, ctx)
     topicTrending(server, ctx)
     labeler(server, ctx)
+    // 健康检查路由必须挂在 xrpc router 之前，否则会被 catchall 拦截
+    app.get('/xrpc/_health', healthRoute())
     app.use(server.xrpc.router)
     app.use(wellKnown(ctx))
     // Sentry Express 错误处理中间件，必须注册在所有路由之后
